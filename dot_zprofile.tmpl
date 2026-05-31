@@ -1,0 +1,17 @@
+# .zprofile — sourced by login shells only
+# Environment setup: proxy, PATH, MANPATH
+
+# Proxy
+export http_proxy=http://localhost:7897
+export https_proxy=http://localhost:7897
+export no_proxy="localhost,127.0.0.1,10.0.0.0/8,*.local"
+
+# PATH
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+# LaTeX (only if installed)
+if [[ -d "$HOME/texlive/2026/bin/x86_64-linux" ]]; then
+  export PATH="$HOME/texlive/2026/bin/x86_64-linux:$PATH"
+  export MANPATH="$HOME/texlive/2026/texmf-dist/doc/man${MANPATH:+:$MANPATH}"
+  export INFOPATH="$HOME/texlive/2026/texmf-dist/doc/info${INFOPATH:+:$INFOPATH}"
+fi

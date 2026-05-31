@@ -1,0 +1,6 @@
+# .zshenv — sourced by ALL shells (interactive, non-interactive, login, script)
+# Keep this file MINIMAL. Only things that truly every shell needs.
+
+typeset -U PATH
+
+export LANG=en_US.utf8
