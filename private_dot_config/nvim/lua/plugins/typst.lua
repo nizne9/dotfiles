@@ -1,6 +1,7 @@
--- Lightweight typst support: delegate to tinymist (LSP) via mason-lspconfig.
--- No tree-sitter grammar, no preview, no wrapper plugin. See TYPST.md
--- for the full rationale.
+-- Lightweight typst support: delegate to tinymist (LSP) via
+-- mason-lspconfig. No tree-sitter grammar (upstream is archived;
+-- remaining forks are stale relative to typst 0.12+), no preview, no
+-- wrapper plugin.
 
 return {
   {
