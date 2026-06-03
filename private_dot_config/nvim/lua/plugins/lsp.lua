@@ -92,33 +92,6 @@ return {
         end,
       })
 
-      -- 0.11+ provides: grn/grr/gra/gri/gO/gd/gD/K/[d/]d
-      vim.lsp.config('*', {
-        on_attach = function(_, bufnr)
-          vim.keymap.set('n', '<leader>fm', function()
-            vim.lsp.buf.format({ async = true })
-          end, {
-            buffer = bufnr,
-            silent = true,
-            desc = 'LSP format',
-          })
-        end,
-      })
-
-      local py_format_group = vim.api.nvim_create_augroup('format_on_save_python', { clear = true })
-
-      vim.api.nvim_create_autocmd('BufWritePre', {
-        group = py_format_group,
-        pattern = '*.py',
-        callback = function(args)
-          if #vim.lsp.get_clients({ bufnr = args.buf, name = 'ruff' }) == 0 then return end
-          vim.lsp.buf.code_action({
-            context = { only = { 'source.fixAll.ruff', 'source.organizeImports.ruff' } },
-            apply = true,
-          })
-        end,
-        desc = 'Format Python with ruff on save',
-      })
     end,
   },
 }
