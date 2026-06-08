@@ -2,12 +2,8 @@
 
 local servers = {
   'lua_ls',
-  'ts_ls',
   'pyright',
   'ruff',
-  'rust_analyzer',
-  'gopls',
-  'clangd',
   'bashls',
   'jsonls',
   'yamlls',
@@ -115,7 +111,7 @@ return {
     },
     opts = {
       ensure_installed = {},
-      automatic_enable = true,
+      automatic_enable = servers,
     },
   },
 }

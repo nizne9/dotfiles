@@ -13,6 +13,8 @@ vim.opt.mouse = 'a'
 vim.opt.signcolumn = 'yes'
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
+vim.opt.undofile = true
+vim.opt.confirm = true
 
 -- 缩进
 vim.opt.tabstop = 4
@@ -26,6 +28,8 @@ vim.opt.scrolloff = 8
 vim.opt.sidescrolloff = 8
 vim.opt.updatetime = 300
 vim.opt.timeoutlen = 400
+vim.opt.splitright = true
+vim.opt.splitbelow = true
 
 -- 搜索
 vim.opt.incsearch = true

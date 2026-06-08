@@ -4,6 +4,8 @@ return {
     priority = 1000,
     lazy = false,
     opts = {
+      bigfile = { enabled = true },
+      quickfile = { enabled = true },
       indent = { enabled = true },
       picker = { enabled = true },
       explorer = { enabled = true },
