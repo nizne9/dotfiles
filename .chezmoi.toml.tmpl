@@ -1,0 +1,4 @@
+{{- $desktopProfile := promptChoiceOnce . "desktopProfile" "Desktop profile" (list "none" "niri-quickshell") "none" -}}
+
+[data]
+    desktopProfile = {{ $desktopProfile | quote }}

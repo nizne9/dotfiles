@@ -1,0 +1,10 @@
+# Desktop/Wayland settings are selected by the local chezmoi data key
+# `desktopProfile`, not by hostname. Valid values are:
+#   none
+#   niri-quickshell
+{{- $desktopProfile := get . "desktopProfile" | default "none" -}}
+{{- if ne $desktopProfile "niri-quickshell" }}
+.config/niri/
+.config/alacritty/alacritty.toml
+.config/quickshell/
+{{ end }}
