@@ -34,6 +34,7 @@ vim.opt.hlsearch = true
 -- 补全（0.11+ 内置 LSP 补全）
 vim.opt.completeopt = { 'menu', 'menuone', 'noselect' }
 
--- Treesitter 折叠（0.11+ 内置）
-vim.wo.foldmethod = 'expr'
-vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+-- Folding provider is selected per buffer/window after Treesitter and LSP
+-- capability checks.
+vim.opt.foldlevel = 99
+vim.opt.foldlevelstart = 99

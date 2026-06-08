@@ -14,6 +14,16 @@ local servers = {
   'tinymist',
 }
 
+local tools = {
+  'stylua',
+  'goimports',
+  'prettier',
+  'prettierd',
+  'shfmt',
+}
+
+local lsp_install_command = 'LspInstall ' .. table.concat(servers, ' ')
+
 local ruff_disable_caps = {
   'hoverProvider',
   'definitionProvider',
@@ -24,37 +34,40 @@ local ruff_disable_caps = {
 
 return {
   {
-    'williamboman/mason.nvim',
+    'mason-org/mason.nvim',
     lazy = false,
+    keys = {
+      {
+        '<leader>mi',
+        '<cmd>MasonInstallConfigured<cr>',
+        desc = 'Install configured Mason tools',
+      },
+    },
     config = function()
       require('mason').setup()
+      vim.api.nvim_create_user_command('MasonInstallConfigured', function()
+        vim.cmd('MasonToolsInstall')
+        vim.cmd(lsp_install_command)
+      end, {
+        desc = 'Install configured Mason tools and LSP servers',
+      })
     end,
   },
 
   {
-    'williamboman/mason-lspconfig.nvim',
+    'WhoIsSethDaniel/mason-tool-installer.nvim',
     dependencies = {
-      'williamboman/mason.nvim',
-      'neovim/nvim-lspconfig',
+      'mason-org/mason.nvim',
     },
     opts = {
-      ensure_installed = servers,
-      automatic_enable = true,
+      ensure_installed = tools,
+      auto_update = false,
+      run_on_start = false,
     },
-    config = function(_, opts)
-      require('mason-lspconfig').setup(opts)
-      -- Force ensure_installed after setup. mason-lspconfig's
-      -- registry.refresh callback may not fire reliably in all
-      -- startup paths; explicit call bypasses that race.
-      vim.defer_fn(function()
-        require('mason-lspconfig.features.ensure_installed')()
-      end, 1000)
-    end,
   },
 
   {
     'neovim/nvim-lspconfig',
-    event = 'BufReadPre',
     config = function()
       vim.lsp.config('pyright', {
         settings = {
@@ -91,7 +104,18 @@ return {
           end
         end,
       })
-
     end,
+  },
+
+  {
+    'mason-org/mason-lspconfig.nvim',
+    dependencies = {
+      'mason-org/mason.nvim',
+      'neovim/nvim-lspconfig',
+    },
+    opts = {
+      ensure_installed = {},
+      automatic_enable = true,
+    },
   },
 }

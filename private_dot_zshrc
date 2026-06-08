@@ -96,16 +96,23 @@ ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 # ------------------
 
 ZIM_HOME=${ZDOTDIR:-${HOME}}/.zim
+ZIMFW_URL=https://github.com/zimfw/zimfw/releases/latest/download/zimfw.zsh
+
 # Download zimfw plugin manager if missing.
 if [[ ! -e ${ZIM_HOME}/zimfw.zsh ]]; then
+  command mkdir -p "${ZIM_HOME}" || return 1
   if (( ${+commands[curl]} )); then
-    curl -fsSL --create-dirs -o ${ZIM_HOME}/zimfw.zsh \
-        https://github.com/zimfw/zimfw/releases/latest/download/zimfw.zsh
+    curl -fsSL -o "${ZIM_HOME}/zimfw.zsh" "${ZIMFW_URL}" || return 1
+  elif (( ${+commands[wget]} )); then
+    wget -q -O "${ZIM_HOME}/zimfw.zsh" "${ZIMFW_URL}" || return 1
   else
-    mkdir -p ${ZIM_HOME} && wget -nv -O ${ZIM_HOME}/zimfw.zsh \
-        https://github.com/zimfw/zimfw/releases/latest/download/zimfw.zsh
+    print -u2 'zimfw: curl or wget is required to download zimfw'
+    return 1
   fi
 fi
+
+unset ZIMFW_URL
+
 # Install missing modules, and update ${ZIM_HOME}/init.zsh if missing or outdated.
 if [[ ! ${ZIM_HOME}/init.zsh -nt ${ZIM_CONFIG_FILE:-${ZDOTDIR:-${HOME}}/.zimrc} ]]; then
   source ${ZIM_HOME}/zimfw.zsh init

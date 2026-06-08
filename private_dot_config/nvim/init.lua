@@ -22,10 +22,9 @@ vim.opt.rtp:prepend(lazypath)
 
 require('lazy').setup({
   spec = { { import = 'plugins' } },
-  defaults = { lazy = true },
+  defaults = { lazy = false },
   checker = { enabled = false },
   change_detection = { enabled = false, notify = false },
-  ui = { enabled = false },
   performance = {
     rtp = {
       disabled_plugins = {
@@ -41,3 +40,5 @@ require('lazy').setup({
     },
   },
 })
+
+require('core.treesitter').setup()
