@@ -4,6 +4,7 @@
 // https://yalter.github.io/niri/Configuration:-Introduction
 environment {
     LANG "zh_CN.UTF-8"
+    QT_QPA_PLATFORMTHEME "gtk3"
     SHLVL "0"
 }
 
