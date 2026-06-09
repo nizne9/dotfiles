@@ -86,13 +86,19 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
 
-        Bar {
-            screen: modelData
-            shell: root
-            niri: niriService
-            notifications: notificationService
-            audioService: audioService
-            mprisService: mprisService
+        Scope {
+            id: screenDelegate
+
+            required property var modelData
+
+            Bar {
+                screen: screenDelegate.modelData
+                shell: root
+                niri: niriService
+                notifications: notificationService
+                audioService: audioService
+                mprisService: mprisService
+            }
         }
     }
 
