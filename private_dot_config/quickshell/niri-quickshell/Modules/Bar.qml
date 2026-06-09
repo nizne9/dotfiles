@@ -237,7 +237,6 @@ PanelWindow {
         anchor.rect.x: audioWidget.mapToItem(null, 0, 0).x
         anchor.rect.y: Theme.barHeight
         audioService: bar.audioService
-        shell: bar.shell
     }
 
     NotificationCenter {

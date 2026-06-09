@@ -10,10 +10,11 @@ PopupWindow {
     property var notifications
 
     width: 360
-    height: Math.min(560, contentHeight + 60)
+    height: Math.min(560, container.contentHeight + Theme.padding * 2)
     color: "transparent"
 
     visible: shell.notificationsVisible
+    onVisibleChanged: if (visible) center.takeFocus()
 
     Rectangle {
         id: container
@@ -23,7 +24,7 @@ PopupWindow {
         border.color: Theme.border
         border.width: 1
 
-        property real contentHeight: 0
+        property real contentHeight: mainColumn.implicitHeight
 
         Column {
             id: mainColumn
@@ -167,9 +168,12 @@ PopupWindow {
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        z: -1
-        onPressed: shell.closeNotifications()
+    function takeFocus() {
+        center.activeFocusItem = null;
+        center.forceActiveFocus();
     }
+
+    Keys.onEscapePressed: shell.closeNotifications()
+
+    onActiveFocusChanged: if (!activeFocus) shell.closeNotifications()
 }

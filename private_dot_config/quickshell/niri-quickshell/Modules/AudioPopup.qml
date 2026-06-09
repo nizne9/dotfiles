@@ -6,7 +6,6 @@ PopupWindow {
     id: audioPopup
 
     property var audioService
-    property var shell
     property bool showing: false
 
     width: 300
@@ -20,6 +19,13 @@ PopupWindow {
         color: Theme.background
         border.color: Theme.border
         border.width: 1
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            onContainsMouseChanged: if (containsMouse) hideTimer.restart()
+            onPressed: hideTimer.restart()
+        }
 
         Column {
             anchors.fill: parent
