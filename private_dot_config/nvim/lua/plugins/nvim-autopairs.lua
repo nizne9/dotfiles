@@ -16,6 +16,7 @@ return {
             'block_comment',
           },
           bash = { 'string', 'string_content', 'comment' },
+          sh = { 'string', 'string_content', 'comment' },
           javascript = { 'string', 'string_fragment', 'template_string', 'comment' },
         },
       })
