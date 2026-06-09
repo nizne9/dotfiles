@@ -110,16 +110,6 @@ ShellRoot {
     }
 
     LazyLoader {
-        id: notificationCenterLoader
-        activeAsync: root.notificationsVisible
-
-        NotificationCenter {
-            shell: root
-            notifications: notificationService
-        }
-    }
-
-    LazyLoader {
         id: osdLoader
         active: true
 

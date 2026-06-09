@@ -123,6 +123,7 @@ PanelWindow {
             }
 
             Rectangle {
+                id: audioWidget
                 visible: audioService
                 width: visible ? 36 : 0
                 height: 24
@@ -139,7 +140,7 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: audioService ? audioService.toggleMute() : undefined
+                    onClicked: audioPopup.show()
                 }
             }
 
@@ -188,6 +189,7 @@ PanelWindow {
             }
 
             Rectangle {
+                id: notifWidget
                 width: 54
                 height: 24
                 radius: Theme.radius
@@ -227,5 +229,23 @@ PanelWindow {
                 }
             }
         }
+    }
+
+    AudioPopup {
+        id: audioPopup
+        anchor.window: bar
+        anchor.rect.x: audioWidget.mapToItem(null, 0, 0).x
+        anchor.rect.y: Theme.barHeight
+        audioService: bar.audioService
+        shell: bar.shell
+    }
+
+    NotificationCenter {
+        id: notifCenter
+        anchor.window: bar
+        anchor.rect.x: notifWidget.mapToItem(null, 0, 0).x + notifWidget.width - 360
+        anchor.rect.y: Theme.barHeight
+        shell: bar.shell
+        notifications: bar.notifications
     }
 }

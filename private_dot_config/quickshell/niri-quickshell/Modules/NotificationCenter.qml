@@ -1,197 +1,175 @@
 import QtQuick
 import Quickshell
 import Quickshell.Services.Notifications
-import Quickshell.Wayland
 import "../Common"
 
-PanelWindow {
+PopupWindow {
     id: center
 
     property var shell
     property var notifications
 
-    anchors {
-        top: true
-        bottom: true
-        right: true
-    }
-
-    implicitWidth: 390
-    visible: shell.notificationsVisible
-    exclusiveZone: 0
+    width: 360
+    height: Math.min(560, contentHeight + 60)
     color: "transparent"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-    onVisibleChanged: {
-        if (visible)
-            Qt.callLater(() => overlay.forceActiveFocus());
-    }
+
+    visible: shell.notificationsVisible
 
     Rectangle {
-        id: overlay
-
+        id: container
         anchors.fill: parent
-        focus: center.visible
-        color: "#00000033"
-        Keys.onEscapePressed: shell.closeNotifications()
+        radius: Theme.radius
+        color: Theme.background
+        border.color: Theme.border
+        border.width: 1
 
-        MouseArea {
+        property real contentHeight: 0
+
+        Column {
+            id: mainColumn
             anchors.fill: parent
-            onClicked: shell.closeNotifications()
-        }
+            anchors.margins: Theme.padding
+            spacing: Theme.gap
 
-        Rectangle {
-            width: 360
-            anchors {
-                top: parent.top
-                bottom: parent.bottom
-                right: parent.right
-                margins: 12
-            }
-            radius: Theme.radius
-            color: Theme.background
-            border.color: Theme.border
-            border.width: 1
+            Row {
+                width: parent.width
+                height: 28
 
-            Column {
-                anchors.fill: parent
-                anchors.margins: Theme.padding
-                spacing: Theme.gap
-
-                Row {
-                    width: parent.width
-                    height: 28
-
-                    Text {
-                        width: parent.width - 80
-                        text: "Notifications"
-                        color: Theme.text
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 15
-                    }
-
-                    Text {
-                        width: 80
-                        horizontalAlignment: Text.AlignRight
-                        text: "Clear"
-                        color: Theme.accent
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: notifications.clearHistory()
-                        }
-                    }
+                Text {
+                    width: parent.width - 80
+                    text: "Notifications"
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 15
                 }
 
-                Flickable {
+                Text {
+                    width: 80
+                    horizontalAlignment: Text.AlignRight
+                    text: "Clear"
+                    color: Theme.accent
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: notifications.clearHistory()
+                    }
+                }
+            }
+
+            Flickable {
+                width: parent.width
+                height: mainColumn.height - 36
+                contentHeight: history.height
+                clip: true
+
+                Column {
+                    id: history
                     width: parent.width
-                    height: parent.height - 36
-                    contentHeight: history.height
-                    clip: true
+                    spacing: Theme.gap
 
-                    Column {
-                        id: history
-                        width: parent.width
-                        spacing: Theme.gap
+                    Repeater {
+                        model: notifications.history
 
-                        Repeater {
-                            model: notifications.history
+                        Rectangle {
+                            id: notificationCard
 
-                            Rectangle {
-                                id: notificationCard
+                            readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
+                            readonly property var notificationItem: modelData
 
-                                readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
-                                readonly property var notificationItem: modelData
+                            width: history.width
+                            height: Math.max(64, body.implicitHeight + 28)
+                            radius: Theme.radius
+                            color: Theme.surface
+                            border.color: critical ? Theme.urgent : "transparent"
+                            border.width: critical ? 1 : 0
 
-                                width: history.width
-                                height: Math.max(64, body.implicitHeight + 28)
-                                radius: Theme.radius
-                                color: Theme.surface
-                                border.color: critical ? Theme.urgent : "transparent"
-                                border.width: critical ? 1 : 0
+                            Column {
+                                id: body
+                                anchors {
+                                    left: parent.left
+                                    right: parent.right
+                                    verticalCenter: parent.verticalCenter
+                                    margins: Theme.padding
+                                }
+                                spacing: 3
 
-                                Column {
-                                    id: body
-                                    anchors {
-                                        left: parent.left
-                                        right: parent.right
-                                        verticalCenter: parent.verticalCenter
-                                        margins: Theme.padding
-                                    }
-                                    spacing: 3
+                                Text {
+                                    width: parent.width
+                                    text: modelData.summary || modelData.appName || "Notification"
+                                    color: Theme.text
+                                    elide: Text.ElideRight
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize
+                                    textFormat: Text.PlainText
+                                }
 
-                                    Text {
-                                        width: parent.width
-                                        text: modelData.summary || modelData.appName || "Notification"
-                                        color: Theme.text
-                                        elide: Text.ElideRight
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize
-                                        textFormat: Text.PlainText
-                                    }
+                                Text {
+                                    width: parent.width
+                                    text: modelData.body || ""
+                                    visible: text.length > 0
+                                    color: Theme.muted
+                                    wrapMode: Text.Wrap
+                                    maximumLineCount: 4
+                                    elide: Text.ElideRight
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 11
+                                    textFormat: Text.PlainText
+                                }
 
-                                    Text {
-                                        width: parent.width
-                                        text: modelData.body || ""
-                                        visible: text.length > 0
-                                        color: Theme.muted
-                                        wrapMode: Text.Wrap
-                                        maximumLineCount: 4
-                                        elide: Text.ElideRight
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: 11
-                                        textFormat: Text.PlainText
-                                    }
+                                Flow {
+                                    width: parent.width
+                                    spacing: 6
+                                    visible: (notificationCard.notificationItem.actions || []).length > 0
 
-                                    Flow {
-                                        width: parent.width
-                                        spacing: 6
-                                        visible: (notificationCard.notificationItem.actions || []).length > 0
+                                    Repeater {
+                                        model: notificationCard.notificationItem.actions || []
 
-                                        Repeater {
-                                            model: notificationCard.notificationItem.actions || []
+                                        Rectangle {
+                                            width: Math.max(56, actionText.implicitWidth + 18)
+                                            height: 24
+                                            radius: Theme.radius
+                                            color: actionHover.hovered ? Theme.surfaceElevated : Theme.background
 
-                                            Rectangle {
-                                                width: Math.max(56, actionText.implicitWidth + 18)
-                                                height: 24
-                                                radius: Theme.radius
-                                                color: actionHover.hovered ? Theme.surfaceElevated : Theme.background
+                                            Text {
+                                                id: actionText
+                                                anchors.centerIn: parent
+                                                text: modelData.text || ""
+                                                color: Theme.text
+                                                font.family: Theme.fontFamily
+                                                font.pixelSize: 11
+                                                textFormat: Text.PlainText
+                                            }
 
-                                                Text {
-                                                    id: actionText
-                                                    anchors.centerIn: parent
-                                                    text: modelData.text || ""
-                                                    color: Theme.text
-                                                    font.family: Theme.fontFamily
-                                                    font.pixelSize: 11
-                                                    textFormat: Text.PlainText
-                                                }
+                                            HoverHandler {
+                                                id: actionHover
+                                            }
 
-                                                HoverHandler {
-                                                    id: actionHover
-                                                }
-
-                                                MouseArea {
-                                                    anchors.fill: parent
-                                                    onClicked: notifications.invokeAction(notificationCard.notificationItem.id, modelData)
-                                                }
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                onClicked: notifications.invokeAction(notificationCard.notificationItem.id, modelData)
                                             }
                                         }
                                     }
                                 }
+                            }
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    acceptedButtons: Qt.RightButton
-                                    onClicked: notifications.dismiss(notificationCard.notificationItem.id)
-                                }
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.RightButton
+                                onClicked: notifications.dismiss(notificationCard.notificationItem.id)
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        z: -1
+        onPressed: shell.closeNotifications()
     }
 }
