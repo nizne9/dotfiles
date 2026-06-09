@@ -1,0 +1,25 @@
+{
+  "theme": {
+    "background": "#1e1e2e",
+    "surface": "#313244",
+    "surfaceElevated": "#45475a",
+    "text": "#cdd6f4",
+    "muted": "#a6adc8",
+    "accent": "#b4befe",
+    "urgent": "#fab387",
+    "border": "#585b70",
+    "barHeight": 34,
+    "radius": 8,
+    "gap": 8,
+    "padding": 10,
+    "fontFamily": "Inter",
+    "fontSize": 12
+  },
+  "notifications": {
+    "maxToasts": 3,
+    "maxHistory": 20,
+    "defaultTimeout": 5000,
+    "lowTimeout": 8000,
+    "criticalTimeout": 0
+  }
+}

@@ -1,11 +1,12 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import "Services"
 import "Modules"
 
 ShellRoot {
-    id: shell
+    id: root
 
     property bool launcherVisible: false
     property bool notificationsVisible: false
@@ -31,30 +32,54 @@ ShellRoot {
     }
 
     Niri {
-        id: niri
+        id: niriService
     }
 
     Notifications {
-        id: notifications
+        id: notificationService
+    }
+
+    Audio {
+        id: audioService
+    }
+
+    Mpris {
+        id: mprisService
     }
 
     IpcHandler {
         target: "shell"
 
         function toggleLauncher() {
-            shell.toggleLauncher();
+            root.toggleLauncher();
         }
 
         function closeLauncher() {
-            shell.closeLauncher();
+            root.closeLauncher();
         }
 
         function toggleNotifications() {
-            shell.toggleNotifications();
+            root.toggleNotifications();
         }
 
         function closeNotifications() {
-            shell.closeNotifications();
+            root.closeNotifications();
+        }
+
+        function lock() {
+            lockScreen.locked = true;
+        }
+
+        function volumeUp() {
+            audioService.setVolume(audioService.volume + 0.05);
+        }
+
+        function volumeDown() {
+            audioService.setVolume(audioService.volume - 0.05);
+        }
+
+        function toggleMute() {
+            audioService.toggleMute();
         }
     }
 
@@ -63,22 +88,59 @@ ShellRoot {
 
         Bar {
             screen: modelData
-            shell: shell
-            niri: niri
-            notifications: notifications
+            shell: root
+            niri: niriService
+            notifications: notificationService
+            audioService: audioService
+            mprisService: mprisService
         }
     }
 
-    Launcher {
-        shell: shell
+    LazyLoader {
+        id: launcherLoader
+        activeAsync: root.launcherVisible
+
+        Launcher {
+            shell: root
+        }
     }
 
     NotificationLayer {
-        notifications: notifications
+        notifications: notificationService
     }
 
-    NotificationCenter {
-        shell: shell
-        notifications: notifications
+    LazyLoader {
+        id: notificationCenterLoader
+        activeAsync: root.notificationsVisible
+
+        NotificationCenter {
+            shell: root
+            notifications: notificationService
+        }
+    }
+
+    LazyLoader {
+        id: osdLoader
+        active: true
+
+        OSD {
+            id: osdPanel
+        }
+    }
+
+    LockScreen {
+        id: lockScreen
+    }
+
+    Connections {
+        target: audioService
+        function onVolumeChanged() {
+            if (osdLoader.active && osdLoader.item)
+                osdLoader.item.show("", audioService.volume, audioService.isMuted ? "M" : "V");
+        }
+        function onIsMutedChanged() {
+            if (osdLoader.active && osdLoader.item)
+                osdLoader.item.show(audioService.isMuted ? "Muted" : "Unmuted", audioService.volume, audioService.isMuted ? "M" : "V");
+        }
     }
 }

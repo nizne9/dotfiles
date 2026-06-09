@@ -1,5 +1,7 @@
 import QtQuick
 import Quickshell
+import Quickshell.Services.SystemTray
+import Quickshell.Widgets
 import "../Common"
 
 PanelWindow {
@@ -8,10 +10,8 @@ PanelWindow {
     property var shell
     property var niri
     property var notifications
-
-    Theme {
-        id: theme
-    }
+    property var audioService
+    property var mprisService
 
     anchors {
         top: true
@@ -19,21 +19,21 @@ PanelWindow {
         right: true
     }
 
-    implicitHeight: theme.barHeight
-    color: theme.background
-    exclusiveZone: theme.barHeight
+    implicitHeight: Theme.barHeight
+    color: Theme.background
+    exclusiveZone: Theme.barHeight
 
     Rectangle {
         anchors.fill: parent
-        color: theme.background
-        border.color: theme.border
+        color: Theme.background
+        border.color: Theme.border
         border.width: 0
 
         Row {
             id: left
             anchors {
                 left: parent.left
-                leftMargin: theme.gap
+                leftMargin: Theme.gap
                 verticalCenter: parent.verticalCenter
             }
             spacing: 6
@@ -41,15 +41,15 @@ PanelWindow {
             Rectangle {
                 width: 60
                 height: 24
-                radius: theme.radius
-                color: theme.surface
+                radius: Theme.radius
+                color: Theme.surface
 
                 Text {
                     anchors.centerIn: parent
                     text: "Apps"
-                    color: theme.text
-                    font.family: theme.fontFamily
-                    font.pixelSize: theme.fontSize
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
                 }
 
                 MouseArea {
@@ -64,15 +64,15 @@ PanelWindow {
                 Rectangle {
                     width: 26
                     height: 24
-                    radius: theme.radius
-                    color: (modelData.is_focused || modelData.is_active) ? theme.accent : theme.surface
+                    radius: Theme.radius
+                    color: (modelData.is_focused || modelData.is_active) ? Theme.accent : Theme.surface
 
                     Text {
                         anchors.centerIn: parent
                         text: modelData.name || modelData.idx || modelData.id
-                        color: (modelData.is_focused || modelData.is_active) ? theme.background : theme.text
-                        font.family: theme.fontFamily
-                        font.pixelSize: theme.fontSize
+                        color: (modelData.is_focused || modelData.is_active) ? Theme.background : Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize
                     }
 
                     MouseArea {
@@ -89,31 +89,116 @@ PanelWindow {
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
             text: niri.focusedWindowTitle
-            color: theme.muted
-            font.family: theme.fontFamily
-            font.pixelSize: theme.fontSize
+            color: Theme.muted
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
         }
 
         Row {
             anchors {
                 right: parent.right
-                rightMargin: theme.gap
+                rightMargin: Theme.gap
                 verticalCenter: parent.verticalCenter
             }
             spacing: 6
 
             Rectangle {
+                visible: mprisService && mprisService.currentPlayer
+                width: visible ? 24 : 0
+                height: 24
+                radius: Theme.radius
+                color: Theme.surface
+
+                IconImage {
+                    anchors.centerIn: parent
+                    width: 16
+                    height: 16
+                    source: mprisService && mprisService.currentPlayer ? (mprisService.currentPlayer.trackArtUrl || Quickshell.iconPath("media-playback-start", "")) : ""
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: mprisService && mprisService.currentPlayer ? mprisService.currentPlayer.togglePlaying() : undefined
+                }
+            }
+
+            Rectangle {
+                visible: audioService
+                width: visible ? 36 : 0
+                height: 24
+                radius: Theme.radius
+                color: Theme.surface
+
+                Text {
+                    anchors.centerIn: parent
+                    text: audioService ? (audioService.isMuted ? "M" : Math.round(audioService.volume * 100) + "%") : ""
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: audioService ? audioService.toggleMute() : undefined
+                }
+            }
+
+            Repeater {
+                model: SystemTray.items
+
+                Rectangle {
+                    id: trayItem
+
+                    readonly property bool active: modelData.status !== Status.Passive
+
+                    width: active ? 24 : 0
+                    height: 24
+                    radius: Theme.radius
+                    visible: active
+                    color: trayHover.hovered ? Theme.surfaceElevated : Theme.surface
+                    border.color: modelData.status === Status.NeedsAttention ? Theme.urgent : "transparent"
+                    border.width: modelData.status === Status.NeedsAttention ? 1 : 0
+
+                    IconImage {
+                        anchors.centerIn: parent
+                        width: 16
+                        height: 16
+                        source: modelData.icon || ""
+                    }
+
+                    HoverHandler {
+                        id: trayHover
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                        onClicked: event => {
+                            const point = trayItem.mapToItem(null, trayItem.width / 2, trayItem.height);
+                            if ((event.button === Qt.RightButton || modelData.onlyMenu) && modelData.hasMenu) {
+                                modelData.display(bar, point.x, point.y);
+                            } else if (event.button === Qt.MiddleButton) {
+                                modelData.secondaryActivate();
+                            } else {
+                                modelData.activate();
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
                 width: 54
                 height: 24
-                radius: theme.radius
-                color: notifications.history.length > 0 ? theme.surfaceElevated : theme.surface
+                radius: Theme.radius
+                color: notifications.history.length > 0 ? Theme.surfaceElevated : Theme.surface
 
                 Text {
                     anchors.centerIn: parent
                     text: "N " + notifications.history.length
-                    color: theme.text
-                    font.family: theme.fontFamily
-                    font.pixelSize: theme.fontSize
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
                 }
 
                 MouseArea {
@@ -125,8 +210,8 @@ PanelWindow {
             Rectangle {
                 width: 76
                 height: 24
-                radius: theme.radius
-                color: theme.surface
+                radius: Theme.radius
+                color: Theme.surface
 
                 SystemClock {
                     id: clock
@@ -136,9 +221,9 @@ PanelWindow {
                 Text {
                     anchors.centerIn: parent
                     text: Qt.formatDateTime(clock.date, "hh:mm")
-                    color: theme.text
-                    font.family: theme.fontFamily
-                    font.pixelSize: theme.fontSize
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
                 }
             }
         }

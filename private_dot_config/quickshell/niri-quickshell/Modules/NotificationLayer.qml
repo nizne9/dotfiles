@@ -1,15 +1,12 @@
 import QtQuick
 import Quickshell
+import Quickshell.Services.Notifications
 import "../Common"
 
 PanelWindow {
     id: layer
 
     property var notifications
-
-    Theme {
-        id: theme
-    }
 
     anchors {
         top: true
@@ -29,17 +26,22 @@ PanelWindow {
             margins: 12
         }
         width: 336
-        spacing: theme.gap
+        spacing: Theme.gap
 
         Repeater {
             model: notifications.toasts
 
             Rectangle {
+                id: notificationCard
+
+                readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
+                readonly property var notificationItem: modelData
+
                 width: parent.width
                 height: Math.max(70, content.implicitHeight + 20)
-                radius: theme.radius
-                color: theme.background
-                border.color: theme.border
+                radius: Theme.radius
+                color: Theme.background
+                border.color: critical ? Theme.urgent : Theme.border
                 border.width: 1
 
                 Column {
@@ -48,35 +50,74 @@ PanelWindow {
                         left: parent.left
                         right: parent.right
                         verticalCenter: parent.verticalCenter
-                        margins: theme.padding
+                        margins: Theme.padding
                     }
                     spacing: 3
 
                     Text {
                         width: parent.width
                         text: modelData.summary || modelData.appName || "Notification"
-                        color: theme.text
+                        color: Theme.text
                         elide: Text.ElideRight
-                        font.family: theme.fontFamily
-                        font.pixelSize: theme.fontSize
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize
+                        textFormat: Text.PlainText
                     }
 
                     Text {
                         width: parent.width
                         text: modelData.body || ""
                         visible: text.length > 0
-                        color: theme.muted
+                        color: Theme.muted
                         wrapMode: Text.Wrap
                         maximumLineCount: 3
                         elide: Text.ElideRight
-                        font.family: theme.fontFamily
+                        font.family: Theme.fontFamily
                         font.pixelSize: 11
+                        textFormat: Text.PlainText
+                    }
+
+                    Flow {
+                        width: parent.width
+                        spacing: 6
+                        visible: (notificationCard.notificationItem.actions || []).length > 0
+
+                        Repeater {
+                            model: notificationCard.notificationItem.actions || []
+
+                            Rectangle {
+                                width: Math.max(56, actionText.implicitWidth + 18)
+                                height: 24
+                                radius: Theme.radius
+                                color: actionHover.hovered ? Theme.surfaceElevated : Theme.surface
+
+                                Text {
+                                    id: actionText
+                                    anchors.centerIn: parent
+                                    text: modelData.text || ""
+                                    color: Theme.text
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 11
+                                    textFormat: Text.PlainText
+                                }
+
+                                HoverHandler {
+                                    id: actionHover
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: notifications.invokeAction(notificationCard.notificationItem.id, modelData)
+                                }
+                            }
+                        }
                     }
                 }
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: notifications.dismiss(modelData.id)
+                    acceptedButtons: Qt.RightButton
+                    onClicked: notifications.dismissToast(notificationCard.notificationItem.id)
                 }
             }
         }

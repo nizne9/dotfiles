@@ -93,4 +93,40 @@ Scope {
         repeat: false
         onTriggered: eventStream.running = true
     }
+
+    Process {
+        id: initWorkspaces
+        running: true
+        command: ["niri", "msg", "-j", "workspaces"]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(this.text);
+                    if (data instanceof Array)
+                        service.setWorkspaces(data);
+                } catch (e) {
+                    console.log("niri init workspaces failed:", e);
+                }
+            }
+        }
+    }
+
+    Process {
+        id: initWindows
+        running: true
+        command: ["niri", "msg", "-j", "windows"]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(this.text);
+                    if (data instanceof Array)
+                        service.setWindows(data);
+                } catch (e) {
+                    console.log("niri init windows failed:", e);
+                }
+            }
+        }
+    }
 }
