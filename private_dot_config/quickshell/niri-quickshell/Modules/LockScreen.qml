@@ -110,7 +110,7 @@ WlSessionLock {
         authenticating = true;
         message = "";
 
-        pamAuth.tryPassword(password);
+        pamAuth.start();
     }
 
     onLockedChanged: {
@@ -123,33 +123,32 @@ WlSessionLock {
 
     PamContext {
         id: pamAuth
-        service: "login"
+        config: "login"
 
-        onStarted: {
-            pamAuth.sendResponse(null);
+        onPamMessage: {
+            if (pamAuth.responseRequired) {
+                pamAuth.respond(lockScreen.password);
+            }
         }
 
-        onPrompt: msg => {
-            pamAuth.sendResponse(lockScreen.password);
+        onCompleted: result => {
+            if (result === PamResult.Success) {
+                lockScreen.locked = false;
+                lockScreen.password = "";
+                lockScreen.authenticating = false;
+                lockScreen.message = "";
+            } else {
+                lockScreen.message = "Authentication failed";
+                lockScreen.password = "";
+                lockScreen.authenticating = false;
+                passwordInput.text = "";
+                Qt.callLater(() => passwordInput.forceActiveFocus());
+            }
         }
 
-        onError: msg => {
-            lockScreen.message = msg;
-        }
-
-        onSuccess: {
-            lockScreen.locked = false;
-            lockScreen.password = "";
+        onError: errorType => {
+            lockScreen.message = "PAM error";
             lockScreen.authenticating = false;
-            lockScreen.message = "";
-        }
-
-        onFailed: {
-            lockScreen.message = "Authentication failed";
-            lockScreen.password = "";
-            lockScreen.authenticating = false;
-            passwordInput.text = "";
-            Qt.callLater(() => passwordInput.forceActiveFocus());
         }
     }
 }

@@ -9,8 +9,8 @@ PopupWindow {
     property var shell
     property var notifications
 
-    width: 360
-    height: Math.min(560, container.contentHeight + Theme.padding * 2)
+    implicitWidth: 360
+    implicitHeight: Math.min(560, container.contentHeight + Theme.padding * 2)
     color: "transparent"
 
     visible: shell.notificationsVisible
@@ -23,6 +23,8 @@ PopupWindow {
         color: Theme.background
         border.color: Theme.border
         border.width: 1
+        onActiveFocusChanged: if (!activeFocus) shell.closeNotifications()
+        Keys.onEscapePressed: shell.closeNotifications()
 
         property real contentHeight: mainColumn.implicitHeight
 
@@ -169,11 +171,6 @@ PopupWindow {
     }
 
     function takeFocus() {
-        center.activeFocusItem = null;
-        center.forceActiveFocus();
+        container.forceActiveFocus();
     }
-
-    Keys.onEscapePressed: shell.closeNotifications()
-
-    onActiveFocusChanged: if (!activeFocus) shell.closeNotifications()
 }

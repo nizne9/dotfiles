@@ -8,15 +8,22 @@ Scope {
 
     property var toasts: []
     property var history: []
-    readonly property int maxToasts: Config.notifications.maxToasts
-    readonly property int maxHistory: Config.notifications.maxHistory
+    readonly property int maxToasts: Config.notifications ? valueOrDefault(Config.notifications.maxToasts, 3) : 3
+    readonly property int maxHistory: Config.notifications ? valueOrDefault(Config.notifications.maxHistory, 20) : 20
+
+    function valueOrDefault(value, defaultValue) {
+        return value === undefined || value === null ? defaultValue : value;
+    }
 
     function timeoutFor(urgency) {
+        var cfg = Config.notifications;
+        if (!cfg)
+            return 5000;
         if (urgency === NotificationUrgency.Critical)
-            return Config.notifications.criticalTimeout;
+            return valueOrDefault(cfg.criticalTimeout, 0);
         if (urgency === NotificationUrgency.Low)
-            return Config.notifications.lowTimeout;
-        return Config.notifications.defaultTimeout;
+            return valueOrDefault(cfg.lowTimeout, 8000);
+        return valueOrDefault(cfg.defaultTimeout, 5000);
     }
 
     function push(notification) {

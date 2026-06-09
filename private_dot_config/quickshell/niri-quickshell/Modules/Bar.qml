@@ -103,7 +103,7 @@ PanelWindow {
             spacing: 6
 
             Rectangle {
-                visible: mprisService && mprisService.currentPlayer
+                visible: !!mprisService && !!mprisService.currentPlayer
                 width: visible ? 24 : 0
                 height: 24
                 radius: Theme.radius
@@ -124,7 +124,7 @@ PanelWindow {
 
             Rectangle {
                 id: audioWidget
-                visible: audioService
+                visible: !!audioService
                 width: visible ? 36 : 0
                 height: 24
                 radius: Theme.radius

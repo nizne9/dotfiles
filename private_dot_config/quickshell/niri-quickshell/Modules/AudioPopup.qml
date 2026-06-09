@@ -8,8 +8,8 @@ PopupWindow {
     property var audioService
     property bool showing: false
 
-    width: 300
-    height: 160
+    implicitWidth: 300
+    implicitHeight: 160
     color: "transparent"
     visible: showing
 

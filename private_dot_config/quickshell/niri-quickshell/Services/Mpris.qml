@@ -12,7 +12,7 @@ Scope {
     property bool isPlaying: false
 
     function selectPlayer() {
-        const players = Mpris.players;
+        const players = Mpris.players.values;
         if (players.length === 0) {
             currentPlayer = null;
             trackTitle = "";
@@ -52,10 +52,8 @@ Scope {
     }
 
     Connections {
-        target: Mpris
-        function onPlayersChanged() {
-            service.selectPlayer();
-        }
+        target: Mpris.players
+        function onValuesChanged() { service.selectPlayer(); }
     }
 
     Connections {
