@@ -10,7 +10,7 @@ PanelWindow {
     property var shell
     property string query: ""
     property int selectedIndex: 0
-    readonly property var filteredEntries: filterEntries(DesktopEntries.applications, query)
+    readonly property var filteredEntries: filterEntries(DesktopEntries.applications.values || [], query)
 
     anchors {
         top: true
@@ -41,7 +41,8 @@ PanelWindow {
 
         return String(entry.name || "").toLowerCase().indexOf(needle) >= 0
             || String(entry.genericName || "").toLowerCase().indexOf(needle) >= 0
-            || String(entry.comment || "").toLowerCase().indexOf(needle) >= 0;
+            || String(entry.comment || "").toLowerCase().indexOf(needle) >= 0
+            || entry.keywords.join(" ").toLowerCase().indexOf(needle) >= 0;
     }
 
     function rank(entry) {
@@ -52,6 +53,7 @@ PanelWindow {
         const name = String(entry.name || "").toLowerCase();
         const genericName = String(entry.genericName || "").toLowerCase();
         const comment = String(entry.comment || "").toLowerCase();
+        const keywords = entry.keywords.join(" ").toLowerCase();
         if (name === needle)
             return 80;
         if (name.startsWith(needle))
@@ -61,6 +63,8 @@ PanelWindow {
         if (name.indexOf(needle) >= 0)
             return 20;
         if (comment.indexOf(needle) >= 0)
+            return 10;
+        if (keywords.indexOf(needle) >= 0)
             return 10;
         return 0;
     }
