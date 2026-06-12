@@ -28,7 +28,9 @@ PanelWindow {
         spacing: Theme.gap
 
         Repeater {
-            model: Notifications.toasts
+            model: ScriptModel {
+                values: Notifications.toasts
+            }
 
             Rectangle {
                 id: notificationCard

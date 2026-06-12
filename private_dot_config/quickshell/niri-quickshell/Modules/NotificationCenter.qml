@@ -8,6 +8,7 @@ PopupWindow {
     id: center
 
     property var shell
+    property bool hovering: hoverHandler.hovered
 
     implicitWidth: 360
     implicitHeight: Math.min(560, container.contentHeight + Theme.padding * 2)
@@ -23,8 +24,11 @@ PopupWindow {
         color: Theme.background
         border.color: Theme.border
         border.width: 1
-        onActiveFocusChanged: if (!activeFocus) shell.closeNotifications()
         Keys.onEscapePressed: shell.closeNotifications()
+
+        HoverHandler {
+            id: hoverHandler
+        }
 
         property real contentHeight: mainColumn.implicitHeight
 
@@ -73,7 +77,9 @@ PopupWindow {
                     spacing: Theme.gap
 
                     Repeater {
-                        model: Notifications.history
+                        model: ScriptModel {
+                            values: Notifications.history
+                        }
 
                         Rectangle {
                             id: notificationCard

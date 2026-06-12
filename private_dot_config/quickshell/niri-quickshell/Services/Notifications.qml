@@ -10,28 +10,19 @@ Scope {
 
     property var toasts: []
     property var history: []
-    readonly property int maxToasts: Config.notifications ? valueOrDefault(Config.notifications.maxToasts, 3) : 3
-    readonly property int maxHistory: Config.notifications ? valueOrDefault(Config.notifications.maxHistory, 20) : 20
-
-    function valueOrDefault(value, defaultValue) {
-        return value === undefined || value === null ? defaultValue : value;
-    }
+    readonly property int maxToasts: Config.notifications.maxToasts
+    readonly property int maxHistory: Config.notifications.maxHistory
 
     function timeoutFor(urgency) {
-        var cfg = Config.notifications;
-        if (!cfg)
-            return 5000;
         if (urgency === NotificationUrgency.Critical)
-            return valueOrDefault(cfg.criticalTimeout, 0);
+            return Config.notifications.criticalTimeout;
         if (urgency === NotificationUrgency.Low)
-            return valueOrDefault(cfg.lowTimeout, 8000);
-        return valueOrDefault(cfg.defaultTimeout, 5000);
+            return Config.notifications.lowTimeout;
+        return Config.notifications.defaultTimeout;
     }
 
-    function push(notification) {
-        notification.tracked = true;
-
-        const item = {
+    function snapshot(notification) {
+        return {
             id: notification.id,
             appName: notification.appName || notification.app_name || "",
             appIcon: notification.appIcon || "",
@@ -41,15 +32,47 @@ Scope {
             actions: notification.actions || [],
             notification: notification
         };
+    }
 
-        toasts = [item].concat(toasts).slice(0, maxToasts);
-        history = [item].concat(history).slice(0, maxHistory);
+    function prependBounded(items, item, maxItems) {
+        const filtered = items.filter(i => i.id !== item.id);
+        filtered.unshift(item);
+        return maxItems > 0 ? filtered.slice(0, maxItems) : [];
+    }
 
-        const timeout = timeoutFor(notification.urgency);
-        if (timeout > 0) {
-            expire.interval = timeout;
-            expire.start();
+    function syncToasts() {
+        const now = Date.now();
+        toasts = toasts.filter(item => item.expiresAt === 0 || item.expiresAt > now).slice(0, maxToasts);
+        scheduleExpiry();
+    }
+
+    function scheduleExpiry() {
+        let nextExpiresAt = 0;
+        for (let i = 0; i < toasts.length; i++) {
+            const expiresAt = toasts[i].expiresAt || 0;
+            if (expiresAt > 0 && (nextExpiresAt === 0 || expiresAt < nextExpiresAt))
+                nextExpiresAt = expiresAt;
         }
+
+        if (nextExpiresAt === 0) {
+            expire.stop();
+            return;
+        }
+
+        expire.interval = Math.max(1, nextExpiresAt - Date.now());
+        expire.restart();
+    }
+
+    function push(notification) {
+        notification.tracked = true;
+
+        const item = snapshot(notification);
+        const timeout = timeoutFor(notification.urgency);
+        item.expiresAt = timeout > 0 ? Date.now() + timeout : 0;
+
+        toasts = prependBounded(toasts, item, maxToasts);
+        history = prependBounded(history, item, maxHistory);
+        scheduleExpiry();
     }
 
     function dismiss(id) {
@@ -59,10 +82,12 @@ Scope {
 
         toasts = toasts.filter(i => i.id !== id);
         history = history.filter(i => i.id !== id);
+        scheduleExpiry();
     }
 
     function dismissToast(id) {
         toasts = toasts.filter(i => i.id !== id);
+        scheduleExpiry();
     }
 
     function invokeAction(id, action) {
@@ -81,7 +106,11 @@ Scope {
         }
         history = [];
         toasts = [];
+        expire.stop();
     }
+
+    onMaxToastsChanged: syncToasts()
+    onMaxHistoryChanged: history = maxHistory > 0 ? history.slice(0, maxHistory) : []
 
     NotificationServer {
         id: server
@@ -97,19 +126,7 @@ Scope {
 
     Timer {
         id: expire
-        interval: 5000
         repeat: false
-        onTriggered: {
-            if (service.toasts.length > 0)
-                service.toasts = service.toasts.slice(0, service.toasts.length - 1);
-            if (service.toasts.length > 0) {
-                const lastItem = service.toasts[service.toasts.length - 1];
-                const nextTimeout = service.timeoutFor(lastItem.urgency);
-                if (nextTimeout > 0) {
-                    expire.interval = nextTimeout;
-                    start();
-                }
-            }
-        }
+        onTriggered: service.syncToasts()
     }
 }

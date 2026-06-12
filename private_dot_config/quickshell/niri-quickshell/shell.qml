@@ -8,6 +8,7 @@ import "Modules"
 ShellRoot {
     id: root
 
+    property bool uiReady: Config.loaded
     property bool launcherVisible: false
     property bool notificationsVisible: false
 
@@ -51,7 +52,8 @@ ShellRoot {
         }
 
         function lock() {
-            lockScreen.locked = true;
+            if (lockScreenLoader.item)
+                lockScreenLoader.item.locked = true;
         }
 
         function volumeUp() {
@@ -68,7 +70,7 @@ ShellRoot {
     }
 
     Variants {
-        model: Quickshell.screens
+        model: root.uiReady ? Quickshell.screens : []
 
         Scope {
             id: screenDelegate
@@ -82,29 +84,35 @@ ShellRoot {
         }
     }
 
-    LazyLoader {
-        id: launcherLoader
-        activeAsync: root.launcherVisible
+    Loader {
+        active: root.uiReady
 
-        Launcher {
+        sourceComponent: Launcher {
             shell: root
         }
     }
 
-    NotificationLayer {
+    Loader {
+        active: root.uiReady
+        sourceComponent: NotificationLayer {
+        }
     }
 
-    LazyLoader {
+    Loader {
         id: osdLoader
-        active: true
+        active: root.uiReady
 
-        OSD {
+        sourceComponent: OSD {
             id: osdPanel
         }
     }
 
-    LockScreen {
-        id: lockScreen
+    Loader {
+        id: lockScreenLoader
+        active: root.uiReady
+        sourceComponent: LockScreen {
+            id: lockScreen
+        }
     }
 
     Connections {
