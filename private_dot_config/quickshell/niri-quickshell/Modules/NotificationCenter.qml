@@ -78,8 +78,12 @@ PopupWindow {
                         Rectangle {
                             id: notificationCard
 
-                            readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
-                            readonly property var notificationItem: modelData
+                            // During a model rebuild the Repeater may briefly
+                            // hand us a null modelData. Hoist a guarded view
+                            // onto it so every binding below stays total.
+                            readonly property var item: modelData || {}
+                            readonly property bool critical: item.urgency === NotificationUrgency.Critical
+                            readonly property var actions: item.actions || []
 
                             width: history.width
                             height: Math.max(64, body.implicitHeight + 28)
@@ -100,7 +104,7 @@ PopupWindow {
 
                                 Text {
                                     width: parent.width
-                                    text: modelData.summary || modelData.appName || "Notification"
+                                    text: notificationCard.item.summary || notificationCard.item.appName || "Notification"
                                     color: Theme.text
                                     elide: Text.ElideRight
                                     font.family: Theme.fontFamily
@@ -110,7 +114,7 @@ PopupWindow {
 
                                 Text {
                                     width: parent.width
-                                    text: modelData.body || ""
+                                    text: notificationCard.item.body || ""
                                     visible: text.length > 0
                                     color: Theme.muted
                                     wrapMode: Text.Wrap
@@ -124,12 +128,18 @@ PopupWindow {
                                 Flow {
                                     width: parent.width
                                     spacing: 6
-                                    visible: (notificationCard.notificationItem.actions || []).length > 0
+                                    visible: notificationCard.actions.length > 0
 
                                     Repeater {
-                                        model: notificationCard.notificationItem.actions || []
+                                        model: notificationCard.actions
 
                                         Rectangle {
+                                            id: actionButton
+
+                                            // Per-action guard for the same reason:
+                                            // modelData can be null between rebuilds.
+                                            readonly property var action: modelData || {}
+
                                             width: Math.max(56, actionText.implicitWidth + 18)
                                             height: 24
                                             radius: Theme.radius
@@ -138,7 +148,7 @@ PopupWindow {
                                             Text {
                                                 id: actionText
                                                 anchors.centerIn: parent
-                                                text: modelData.text || ""
+                                                text: actionButton.action.text || ""
                                                 color: Theme.text
                                                 font.family: Theme.fontFamily
                                                 font.pixelSize: 11
@@ -151,7 +161,7 @@ PopupWindow {
 
                                             MouseArea {
                                                 anchors.fill: parent
-                                                onClicked: notifications.invokeAction(notificationCard.notificationItem.id, modelData)
+                                                onClicked: notifications.invokeAction(notificationCard.item.id, actionButton.action)
                                             }
                                         }
                                     }
@@ -161,7 +171,7 @@ PopupWindow {
                             MouseArea {
                                 anchors.fill: parent
                                 acceptedButtons: Qt.RightButton
-                                onClicked: notifications.dismiss(notificationCard.notificationItem.id)
+                                onClicked: notifications.dismiss(notificationCard.item.id)
                             }
                         }
                     }
