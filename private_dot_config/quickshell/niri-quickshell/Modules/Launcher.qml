@@ -10,7 +10,21 @@ PanelWindow {
     property var shell
     property string query: ""
     property int selectedIndex: 0
-    readonly property var filteredEntries: filterEntries(DesktopEntries.applications.values || [], query)
+    property var filteredEntries: []
+
+    // Re-filter when the launcher becomes visible or when the query changes.
+    // We deliberately do NOT subscribe to DesktopEntries.applications.valuesChanged
+    // here: a hot-reload of desktop entries (e.g. an install script) causes the
+    // QAbstractListModel to reset, and a synchronous refilter during that reset
+    // can crash the QML engine inside QQuickRepeater::regenerate. The visible
+    // hook below already covers the user-visible state, and any later installs
+    // will be picked up the next time the launcher is opened.
+    function refilter() {
+        const apps = (typeof DesktopEntries !== "undefined" && DesktopEntries.applications)
+            ? (DesktopEntries.applications.values || [])
+            : [];
+        filteredEntries = filterEntries(apps, query);
+    }
 
     anchors {
         top: true
@@ -26,13 +40,17 @@ PanelWindow {
     WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     onVisibleChanged: {
         if (visible) {
+            refilter();
             query = "";
             selectedIndex = 0;
             search.text = "";
             Qt.callLater(() => search.forceActiveFocus());
         }
     }
-    onQueryChanged: selectedIndex = 0
+    onQueryChanged: {
+        selectedIndex = 0;
+        refilter();
+    }
 
     function matches(entry) {
         const needle = query.trim().toLowerCase();
@@ -73,12 +91,27 @@ PanelWindow {
         const result = [];
         for (let i = 0; i < entries.length; i++) {
             const entry = entries[i];
-            if (!entry.noDisplay && launcher.matches(entry))
-                result.push(entry);
+            if (!entry || entry.noDisplay)
+                continue;
+            // Filter the matched entries down to plain objects so the model we
+            // hand to ScriptModel only references fields we actually use. This
+            // also severs the reference to the underlying DesktopEntry during
+            // a hot-reload window, when the QObject for the entry may briefly
+            // be in an inconsistent state.
+            if (launcher.matches(entry)) {
+                result.push({
+                    name: entry.name || "",
+                    comment: entry.comment || "",
+                    genericName: entry.genericName || "",
+                    icon: entry.icon || "",
+                    exec: entry.exec || "",
+                    entry: entry
+                });
+            }
         }
 
         return result.sort((a, b) => launcher.rank(b) - launcher.rank(a)
-            || String(a.name || "").localeCompare(String(b.name || "")));
+            || String(a.name).localeCompare(String(b.name)));
     }
 
     function moveSelection(delta) {
@@ -96,7 +129,14 @@ PanelWindow {
         if (!entry)
             return;
 
-        entry.execute();
+        // The modelData here is now a plain object built by filterEntries,
+        // so the actual DesktopEntry lives on .entry.
+        const target = entry.entry || entry;
+        try {
+            target.execute();
+        } catch (e) {
+            console.warn("launcher: execute() failed", e);
+        }
         shell.closeLauncher();
     }
 
@@ -192,7 +232,14 @@ PanelWindow {
                     height: parent.height - 46
                     clip: true
                     spacing: 4
-                    model: launcher.filteredEntries
+                    // ScriptModel diffs the values array and only emits
+                    // itemsInserted/Removed/Changed to the ListView, so the
+                    // ListView's delegate pool is reused across query changes
+                    // instead of being torn down and rebuilt (which is the
+                    // path that segfaults when DesktopEntries is being reset).
+                    model: ScriptModel {
+                        values: launcher.filteredEntries
+                    }
                     currentIndex: launcher.selectedIndex
 
                     delegate: Rectangle {

@@ -104,7 +104,11 @@ ShellRoot {
 
     LazyLoader {
         id: launcherLoader
-        activeAsync: root.launcherVisible
+        // active rather than activeAsync: this is a small PanelWindow and
+        // making it async means the first onVisibleChanged can fire before
+        // the delegate exists, which is the path that loses the first OSD /
+        // locks focus to nothing.
+        active: root.launcherVisible
 
         Launcher {
             shell: root
