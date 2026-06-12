@@ -1,17 +1,18 @@
 import QtQuick
+import QtQuick.Layouts
 import Quickshell
-import Quickshell.Services.SystemTray
+import Quickshell.Wayland
 import Quickshell.Widgets
-import "../Common"
+import Quickshell.Services.SystemTray
+import Quickshell.Services.Mpris
+import qs.Modules
+import qs.Services
+import qs.Common
+import qs.Widgets
 
 PanelWindow {
     id: bar
-
     property var shell
-    property var niri
-    property var notifications
-    property var audioService
-    property var mprisService
 
     anchors {
         top: true
@@ -20,17 +21,16 @@ PanelWindow {
     }
 
     implicitHeight: Theme.barHeight
-    color: Theme.background
     exclusiveZone: Theme.barHeight
+    color: "transparent"
 
     Rectangle {
         anchors.fill: parent
         color: Theme.background
         border.color: Theme.border
-        border.width: 0
+        border.width: 1
 
         Row {
-            id: left
             anchors {
                 left: parent.left
                 leftMargin: Theme.gap
@@ -39,14 +39,15 @@ PanelWindow {
             spacing: 6
 
             Rectangle {
-                width: 60
+                id: audioWidget
+                width: 40
                 height: 24
                 radius: Theme.radius
                 color: Theme.surface
 
                 Text {
                     anchors.centerIn: parent
-                    text: "Apps"
+                    text: Audio.isMuted ? "M" : Math.round(Audio.volume * 100) + "%"
                     color: Theme.text
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize
@@ -54,30 +55,39 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: shell.toggleLauncher()
+                    onClicked: audioPopup.show()
                 }
             }
 
             Repeater {
-                model: niri.workspaces
+                model: Niri.workspaces
 
                 Rectangle {
+                    id: wsRect
+
+                    // Guard against null modelData during Repeater regeneration
+                    // when Niri.workspaces resets on startup or workspace change.
+                    readonly property var ws: modelData || {}
+
                     width: 26
                     height: 24
                     radius: Theme.radius
-                    color: (modelData.is_focused || modelData.is_active) ? Theme.accent : Theme.surface
+                    color: (ws.is_focused || ws.is_active) ? Theme.accent : Theme.surface
 
                     Text {
                         anchors.centerIn: parent
-                        text: modelData.name || modelData.idx || modelData.id
-                        color: (modelData.is_focused || modelData.is_active) ? Theme.background : Theme.text
+                        text: ws.name || ws.idx || ws.id || ""
+                        color: (ws.is_focused || ws.is_active) ? Theme.background : Theme.text
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize
                     }
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: niri.focusWorkspace(modelData)
+                        onClicked: {
+                            if (wsRect.ws && wsRect.ws.id !== undefined)
+                                Niri.focusWorkspace(wsRect.ws);
+                        }
                     }
                 }
             }
@@ -88,7 +98,7 @@ PanelWindow {
             width: Math.min(parent.width * 0.42, 720)
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
-            text: niri.focusedWindowTitle
+            text: Niri.focusedWindowTitle
             color: Theme.muted
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSize
@@ -103,36 +113,15 @@ PanelWindow {
             spacing: 6
 
             Rectangle {
-                visible: !!mprisService && !!mprisService.currentPlayer
+                visible: !!Mpris.currentPlayer
                 width: visible ? 24 : 0
-                height: 24
-                radius: Theme.radius
-                color: Theme.surface
-
-                IconImage {
-                    anchors.centerIn: parent
-                    width: 16
-                    height: 16
-                    source: mprisService && mprisService.currentPlayer ? (mprisService.currentPlayer.trackArtUrl || Quickshell.iconPath("media-playback-start", "")) : ""
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: mprisService && mprisService.currentPlayer ? mprisService.currentPlayer.togglePlaying() : undefined
-                }
-            }
-
-            Rectangle {
-                id: audioWidget
-                visible: !!audioService
-                width: visible ? 36 : 0
                 height: 24
                 radius: Theme.radius
                 color: Theme.surface
 
                 Text {
                     anchors.centerIn: parent
-                    text: audioService ? (audioService.isMuted ? "M" : Math.round(audioService.volume * 100) + "%") : ""
+                    text: Mpris.currentPlayer?.playbackState === Mpris.Playing ? "⏸" : "▶"
                     color: Theme.text
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize
@@ -140,7 +129,7 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: audioPopup.show()
+                    onClicked: Mpris.currentPlayer?.playPause()
                 }
             }
 
@@ -150,21 +139,25 @@ PanelWindow {
                 Rectangle {
                     id: trayItem
 
-                    readonly property bool active: modelData.status !== Status.Passive
+                    // Guard against null modelData during Repeater regeneration
+                    // when SystemTray.items resets on startup or tray changes.
+                    readonly property var item: modelData || {}
+
+                    readonly property bool active: item.status !== Status.Passive
 
                     width: active ? 24 : 0
                     height: 24
                     radius: Theme.radius
                     visible: active
                     color: trayHover.hovered ? Theme.surfaceElevated : Theme.surface
-                    border.color: modelData.status === Status.NeedsAttention ? Theme.urgent : "transparent"
-                    border.width: modelData.status === Status.NeedsAttention ? 1 : 0
+                    border.color: item.status === Status.NeedsAttention ? Theme.urgent : "transparent"
+                    border.width: item.status === Status.NeedsAttention ? 1 : 0
 
                     IconImage {
                         anchors.centerIn: parent
                         width: 16
                         height: 16
-                        source: modelData.icon || ""
+                        source: trayItem.item.icon || ""
                     }
 
                     HoverHandler {
@@ -176,12 +169,12 @@ PanelWindow {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                         onClicked: event => {
                             const point = trayItem.mapToItem(null, trayItem.width / 2, trayItem.height);
-                            if ((event.button === Qt.RightButton || modelData.onlyMenu) && modelData.hasMenu) {
-                                modelData.display(bar, point.x, point.y);
+                            if ((event.button === Qt.RightButton || trayItem.item.onlyMenu) && trayItem.item.hasMenu) {
+                                trayItem.item.display(bar, point.x, point.y);
                             } else if (event.button === Qt.MiddleButton) {
-                                modelData.secondaryActivate();
+                                trayItem.item.secondaryActivate();
                             } else {
-                                modelData.activate();
+                                trayItem.item.activate();
                             }
                         }
                     }
@@ -190,17 +183,35 @@ PanelWindow {
 
             Rectangle {
                 id: notifWidget
-                width: 54
-                height: 24
-                radius: Theme.radius
-                color: notifications.history.length > 0 ? Theme.surfaceElevated : Theme.surface
 
-                Text {
+                readonly property bool hasNotifications: Notifications.history.length > 0
+
+                visible: hasNotifications
+                width: hasNotifications ? Style.widgetHeight : 0
+                height: Style.widgetHeight
+                radius: Theme.radius
+                color: notifHover.hovered ? Theme.surfaceElevated : Theme.surface
+
+                Icon {
                     anchors.centerIn: parent
-                    text: "N " + notifications.history.length
+                    name: "bell"
+                    size: Style.iconSize
                     color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
+                }
+
+                Rectangle {
+                    width: 5
+                    height: 5
+                    radius: 2.5
+                    color: Theme.accent
+                    anchors.right: parent.right
+                    anchors.rightMargin: 5
+                    anchors.top: parent.top
+                    anchors.topMargin: 5
+                }
+
+                HoverHandler {
+                    id: notifHover
                 }
 
                 MouseArea {
@@ -236,15 +247,13 @@ PanelWindow {
         anchor.window: bar
         anchor.rect.x: audioWidget.mapToItem(null, 0, 0).x
         anchor.rect.y: Theme.barHeight
-        audioService: bar.audioService
     }
 
     NotificationCenter {
         id: notifCenter
         anchor.window: bar
-        anchor.rect.x: notifWidget.mapToItem(null, 0, 0).x + notifWidget.width - 360
+        anchor.rect.x: bar.width - Theme.gap - Style.panelWidthL
         anchor.rect.y: Theme.barHeight
         shell: bar.shell
-        notifications: bar.notifications
     }
 }

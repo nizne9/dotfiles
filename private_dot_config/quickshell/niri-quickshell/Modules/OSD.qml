@@ -16,7 +16,7 @@ PanelWindow {
         right: true
     }
 
-    implicitWidth: 280
+    implicitWidth: Style.panelWidthS
     implicitHeight: 64
     exclusiveZone: 0
     color: "transparent"
@@ -24,10 +24,24 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
 
+    onShowingChanged: {
+        if (showing)
+            hideTimer.restart();
+    }
+
     Rectangle {
         anchors.fill: parent
+        opacity: osd.showing ? 1 : 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Anims.durShort
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Anims.emphasizedDecel
+            }
+        }
         anchors.margins: 8
-        radius: Theme.radius
+        radius: Style.radius
         color: Theme.background
         border.color: Theme.border
         border.width: 1
@@ -37,9 +51,9 @@ PanelWindow {
                 left: parent.left
                 right: parent.right
                 verticalCenter: parent.verticalCenter
-                margins: Theme.padding
+                margins: Style.paddingM
             }
-            spacing: Theme.gap
+            spacing: Style.gapM
 
             Text {
                 text: osd.icon
@@ -60,7 +74,7 @@ PanelWindow {
             }
 
             Rectangle {
-                width: parent.width - (osd.icon.length > 0 ? 24 : 0) - (osd.label.length > 0 ? osd.label.length * 7 : 0) - Theme.gap * 2
+                width: parent.width - (osd.icon.length > 0 ? 24 : 0) - (osd.label.length > 0 ? osd.label.length * 7 : 0) - Style.gapM * 2
                 height: 6
                 radius: 3
                 color: Theme.surface
@@ -96,6 +110,5 @@ PanelWindow {
         value = val;
         icon = ico || "";
         showing = true;
-        hideTimer.restart();
     }
 }

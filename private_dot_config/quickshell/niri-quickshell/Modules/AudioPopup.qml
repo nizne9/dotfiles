@@ -1,21 +1,37 @@
 import QtQuick
 import Quickshell
 import "../Common"
+import "../Services"
 
 PopupWindow {
     id: audioPopup
 
-    property var audioService
     property bool showing: false
 
-    implicitWidth: 300
+    implicitWidth: Style.panelWidthM
     implicitHeight: 160
     color: "transparent"
     visible: showing
 
+    onShowingChanged: {
+        if (showing) {
+            hideTimer.restart();
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
-        radius: Theme.radius
+        opacity: audioPopup.showing ? 1 : 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Anims.durShort
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Anims.emphasizedDecel
+            }
+        }
+
+        radius: Style.radius
         color: Theme.background
         border.color: Theme.border
         border.width: 1
@@ -29,8 +45,8 @@ PopupWindow {
 
         Column {
             anchors.fill: parent
-            anchors.margins: Theme.padding
-            spacing: Theme.gap
+            anchors.margins: Style.paddingM
+            spacing: Style.gapM
 
             Text {
                 text: "Audio"
@@ -41,17 +57,17 @@ PopupWindow {
 
             Row {
                 width: parent.width
-                spacing: Theme.gap
+                spacing: Style.gapM
 
                 Rectangle {
                     width: 24
                     height: 24
-                    radius: Theme.radius
+                    radius: Style.radius
                     color: Theme.surface
 
                     Text {
                         anchors.centerIn: parent
-                        text: audioService && audioService.isMuted ? "M" : "V"
+                        text: Audio.isMuted ? "M" : "V"
                         color: Theme.text
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize
@@ -59,35 +75,32 @@ PopupWindow {
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: audioService ? audioService.toggleMute() : undefined
+                        onClicked: Audio.toggleMute()
                     }
                 }
 
                 Rectangle {
-                    width: parent.width - 24 - Theme.gap
+                    width: parent.width - 24 - Style.gapM
                     height: 24
-                    radius: Theme.radius
+                    radius: Style.radius
                     color: Theme.surface
 
                     Rectangle {
-                        width: Math.max(3, parent.width * (audioService ? audioService.volume : 0))
+                        width: Math.max(3, parent.width * Audio.volume)
                         height: parent.height
-                        radius: Theme.radius
+                        radius: Style.radius
                         color: Theme.accent
                     }
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: mouse => {
-                            if (audioService)
-                                audioService.setVolume(mouse.x / parent.width);
-                        }
+                        onClicked: mouse => Audio.setVolume(mouse.x / parent.width)
                     }
                 }
             }
 
             Text {
-                text: audioService ? (audioService.isMuted ? "Muted" : Math.round(audioService.volume * 100) + "%") : ""
+                text: Audio.isMuted ? "Muted" : Math.round(Audio.volume * 100) + "%"
                 color: Theme.muted
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize
@@ -104,6 +117,5 @@ PopupWindow {
 
     function show() {
         showing = true;
-        hideTimer.restart();
     }
 }

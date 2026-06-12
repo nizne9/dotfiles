@@ -31,22 +31,6 @@ ShellRoot {
         notificationsVisible = false;
     }
 
-    Niri {
-        id: niriService
-    }
-
-    Notifications {
-        id: notificationService
-    }
-
-    Audio {
-        id: audioService
-    }
-
-    Mpris {
-        id: mprisService
-    }
-
     IpcHandler {
         target: "shell"
 
@@ -71,15 +55,15 @@ ShellRoot {
         }
 
         function volumeUp() {
-            audioService.setVolume(audioService.volume + 0.05);
+            Audio.setVolume(Audio.volume + 0.05);
         }
 
         function volumeDown() {
-            audioService.setVolume(audioService.volume - 0.05);
+            Audio.setVolume(Audio.volume - 0.05);
         }
 
         function toggleMute() {
-            audioService.toggleMute();
+            Audio.toggleMute();
         }
     }
 
@@ -94,21 +78,13 @@ ShellRoot {
             Bar {
                 screen: screenDelegate.modelData
                 shell: root
-                niri: niriService
-                notifications: notificationService
-                audioService: audioService
-                mprisService: mprisService
             }
         }
     }
 
     LazyLoader {
         id: launcherLoader
-        // active rather than activeAsync: this is a small PanelWindow and
-        // making it async means the first onVisibleChanged can fire before
-        // the delegate exists, which is the path that loses the first OSD /
-        // locks focus to nothing.
-        active: root.launcherVisible
+        activeAsync: root.launcherVisible
 
         Launcher {
             shell: root
@@ -116,7 +92,6 @@ ShellRoot {
     }
 
     NotificationLayer {
-        notifications: notificationService
     }
 
     LazyLoader {
@@ -133,14 +108,14 @@ ShellRoot {
     }
 
     Connections {
-        target: audioService
+        target: Audio
         function onVolumeChanged() {
             if (osdLoader.active && osdLoader.item)
-                osdLoader.item.show("", audioService.volume, audioService.isMuted ? "M" : "V");
+                osdLoader.item.show("", Audio.volume, Audio.isMuted ? "M" : "V");
         }
         function onIsMutedChanged() {
             if (osdLoader.active && osdLoader.item)
-                osdLoader.item.show(audioService.isMuted ? "Muted" : "Unmuted", audioService.volume, audioService.isMuted ? "M" : "V");
+                osdLoader.item.show(Audio.isMuted ? "Muted" : "Unmuted", Audio.volume, Audio.isMuted ? "M" : "V");
         }
     }
 }

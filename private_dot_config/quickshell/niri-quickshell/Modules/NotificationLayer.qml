@@ -2,11 +2,10 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.Notifications
 import "../Common"
+import "../Services"
 
 PanelWindow {
     id: layer
-
-    property var notifications
 
     anchors {
         top: true
@@ -17,7 +16,7 @@ PanelWindow {
     implicitHeight: 220
     exclusiveZone: 0
     color: "transparent"
-    visible: notifications.toasts.length > 0
+    visible: Notifications.toasts.length > 0
 
     Column {
         anchors {
@@ -29,17 +28,13 @@ PanelWindow {
         spacing: Theme.gap
 
         Repeater {
-            model: notifications.toasts
+            model: Notifications.toasts
 
             Rectangle {
                 id: notificationCard
 
-                // During a model rebuild the Repeater may briefly hand us
-                // a null modelData. Hoist a guarded view onto it so every
-                // binding below stays total.
-                readonly property var item: modelData || {}
-                readonly property bool critical: item.urgency === NotificationUrgency.Critical
-                readonly property var actions: item.actions || []
+                readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
+                readonly property var notificationItem: modelData
 
                 width: parent.width
                 height: Math.max(70, content.implicitHeight + 20)
@@ -60,7 +55,7 @@ PanelWindow {
 
                     Text {
                         width: parent.width
-                        text: notificationCard.item.summary || notificationCard.item.appName || "Notification"
+                        text: modelData.summary || modelData.appName || "Notification"
                         color: Theme.text
                         elide: Text.ElideRight
                         font.family: Theme.fontFamily
@@ -70,7 +65,7 @@ PanelWindow {
 
                     Text {
                         width: parent.width
-                        text: notificationCard.item.body || ""
+                        text: modelData.body || ""
                         visible: text.length > 0
                         color: Theme.muted
                         wrapMode: Text.Wrap
@@ -84,17 +79,12 @@ PanelWindow {
                     Flow {
                         width: parent.width
                         spacing: 6
-                        visible: notificationCard.actions.length > 0
+                        visible: (notificationCard.notificationItem.actions || []).length > 0
 
                         Repeater {
-                            model: notificationCard.actions
+                            model: notificationCard.notificationItem.actions || []
 
                             Rectangle {
-                                id: actionButton
-
-                                // Per-action guard.
-                                readonly property var action: modelData || {}
-
                                 width: Math.max(56, actionText.implicitWidth + 18)
                                 height: 24
                                 radius: Theme.radius
@@ -103,7 +93,7 @@ PanelWindow {
                                 Text {
                                     id: actionText
                                     anchors.centerIn: parent
-                                    text: actionButton.action.text || ""
+                                    text: modelData.text || ""
                                     color: Theme.text
                                     font.family: Theme.fontFamily
                                     font.pixelSize: 11
@@ -116,7 +106,7 @@ PanelWindow {
 
                                 MouseArea {
                                     anchors.fill: parent
-                                    onClicked: notifications.invokeAction(notificationCard.item.id, actionButton.action)
+                                    onClicked: Notifications.invokeAction(notificationCard.notificationItem.id, modelData)
                                 }
                             }
                         }
@@ -126,7 +116,7 @@ PanelWindow {
                 MouseArea {
                     anchors.fill: parent
                     acceptedButtons: Qt.RightButton
-                    onClicked: notifications.dismissToast(notificationCard.item.id)
+                    onClicked: Notifications.dismissToast(notificationCard.notificationItem.id)
                 }
             }
         }

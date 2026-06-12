@@ -1,3 +1,4 @@
+Icon Icon.qml
 singleton Pill Pill.qml
 singleton PillButton PillButton.qml
 singleton SliderRow SliderRow.qml

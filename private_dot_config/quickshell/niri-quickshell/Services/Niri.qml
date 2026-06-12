@@ -1,9 +1,13 @@
+pragma Singleton
+
 import QtQuick
 import Quickshell
 import Quickshell.Io
 
 Scope {
     id: service
+
+    readonly property string socketPath: Quickshell.env("NIRI_SOCKET")
 
     property var workspaces: []
     property var windows: []
@@ -32,6 +36,30 @@ Scope {
             focusedWindowId = id === null || id === undefined ? -1 : id;
             updateFocusedWindowTitle();
         }
+    }
+
+    function handleRequest(line) {
+        const text = String(line).trim();
+        if (text.length === 0)
+            return;
+
+        let msg = {};
+        try {
+            msg = JSON.parse(text);
+        } catch (error) {
+            console.log("niri request parse failed:", error, text);
+            return;
+        }
+
+        // Synchronous request/response is wrapped in {"Ok": ...}
+        if (!msg.Ok)
+            return;
+
+        const res = msg.Ok;
+        if (res.Workspaces)
+            setWorkspaces(res.Workspaces);
+        else if (res.Windows)
+            setWindows(res.Windows);
     }
 
     function setWorkspaces(next) {
@@ -68,64 +96,55 @@ Scope {
         Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", String(ref)]);
     }
 
-    Process {
-        id: eventStream
-        running: true
-        command: ["niri", "msg", "-j", "event-stream"]
+    function startEventStream() {
+        niriEventStream.write('"EventStream"\n');
+        niriEventStream.flush();
+    }
 
-        stdout: SplitParser {
-            onRead: data => service.handleEvent(data)
-        }
+    function refreshWorkspaces() {
+        niriRequestSocket.write('"Workspaces"\n');
+        niriRequestSocket.flush();
+    }
 
-        stderr: SplitParser {
-            onRead: data => console.log("niri:", data)
-        }
+    function refreshWindows() {
+        niriRequestSocket.write('"Windows"\n');
+        niriRequestSocket.flush();
+    }
 
-        onRunningChanged: {
-            if (!running)
-                restart.start();
+    Socket {
+        id: niriEventStream
+        path: service.socketPath
+        connected: service.socketPath.length > 0
+
+        parser: SplitParser {
+            onRead: line => service.handleEvent(line)
         }
     }
 
-    Timer {
-        id: restart
-        interval: 2500
-        repeat: false
-        onTriggered: eventStream.running = true
-    }
+    Socket {
+        id: niriRequestSocket
+        path: service.socketPath
+        connected: service.socketPath.length > 0
 
-    Process {
-        id: initWorkspaces
-        running: true
-        command: ["niri", "msg", "-j", "workspaces"]
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const data = JSON.parse(this.text);
-                    if (data instanceof Array)
-                        service.setWorkspaces(data);
-                } catch (e) {
-                    console.log("niri init workspaces failed:", e);
-                }
-            }
+        parser: SplitParser {
+            onRead: line => service.handleRequest(line)
         }
     }
 
-    Process {
-        id: initWindows
-        running: true
-        command: ["niri", "msg", "-j", "windows"]
+    Connections {
+        target: niriEventStream
+        function onConnectedChanged() {
+            if (connected)
+                service.startEventStream();
+        }
+    }
 
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const data = JSON.parse(this.text);
-                    if (data instanceof Array)
-                        service.setWindows(data);
-                } catch (e) {
-                    console.log("niri init windows failed:", e);
-                }
+    Connections {
+        target: niriRequestSocket
+        function onConnectedChanged() {
+            if (connected) {
+                service.refreshWorkspaces();
+                service.refreshWindows();
             }
         }
     }
