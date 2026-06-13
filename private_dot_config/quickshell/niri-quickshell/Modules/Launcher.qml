@@ -52,6 +52,17 @@ PanelWindow {
         refilter();
     }
 
+    Loader {
+        id: nativeSearchLoader
+        active: true
+        source: "LauncherNativeSearch.qml"
+
+        onStatusChanged: {
+            if (status === Loader.Error)
+                console.warn("launcher: native fzy search unavailable, using fallback");
+        }
+    }
+
     function matches(entry) {
         const needle = query.trim().toLowerCase();
         if (needle.length === 0)
@@ -60,7 +71,10 @@ PanelWindow {
         return String(entry.name || "").toLowerCase().indexOf(needle) >= 0
             || String(entry.genericName || "").toLowerCase().indexOf(needle) >= 0
             || String(entry.comment || "").toLowerCase().indexOf(needle) >= 0
-            || entry.keywords.join(" ").toLowerCase().indexOf(needle) >= 0;
+            || String(entry.exec || "").toLowerCase().indexOf(needle) >= 0
+            || String(entry.id || "").toLowerCase().indexOf(needle) >= 0
+            || (entry.keywords || []).join(" ").toLowerCase().indexOf(needle) >= 0
+            || (entry.categories || []).join(" ").toLowerCase().indexOf(needle) >= 0;
     }
 
     function rank(entry) {
@@ -71,7 +85,7 @@ PanelWindow {
         const name = String(entry.name || "").toLowerCase();
         const genericName = String(entry.genericName || "").toLowerCase();
         const comment = String(entry.comment || "").toLowerCase();
-        const keywords = entry.keywords.join(" ").toLowerCase();
+        const keywords = (entry.keywords || []).join(" ").toLowerCase();
         if (name === needle)
             return 80;
         if (name.startsWith(needle))
@@ -87,6 +101,41 @@ PanelWindow {
         return 0;
     }
 
+    function toStringList(value) {
+        if (!value)
+            return [];
+        if (Array.isArray(value))
+            return value.map(item => String(item || "")).filter(item => item.length > 0);
+        if (typeof value === "string")
+            return value.split(/[;,]/).map(item => item.trim()).filter(item => item.length > 0);
+        try {
+            const out = [];
+            for (let i = 0; i < value.length; i++) {
+                const text = String(value[i] || "");
+                if (text.length > 0)
+                    out.push(text);
+            }
+            return out;
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function makeSnapshot(entry) {
+        return {
+            key: entry.id || entry.exec || entry.name || "",
+            id: entry.id || "",
+            name: entry.name || "",
+            comment: entry.comment || "",
+            genericName: entry.genericName || "",
+            keywords: toStringList(entry.keywords),
+            categories: toStringList(entry.categories),
+            icon: entry.icon || "",
+            exec: entry.exec || "",
+            entry: entry
+        };
+    }
+
     function filterEntries(entries, queryText) {
         const result = [];
         for (let i = 0; i < entries.length; i++) {
@@ -98,20 +147,25 @@ PanelWindow {
             // also severs the reference to the underlying DesktopEntry during
             // a hot-reload window, when the QObject for the entry may briefly
             // be in an inconsistent state.
-            if (launcher.matches(entry)) {
-                result.push({
-                    name: entry.name || "",
-                    comment: entry.comment || "",
-                    genericName: entry.genericName || "",
-                    icon: entry.icon || "",
-                    exec: entry.exec || "",
-                    entry: entry
-                });
+            result.push(makeSnapshot(entry));
+        }
+
+        const needle = String(queryText || "").trim();
+        if (needle.length === 0)
+            return result.sort((a, b) => String(a.name).localeCompare(String(b.name))).slice(0, 50);
+
+        if (nativeSearchLoader.status === Loader.Ready && nativeSearchLoader.item) {
+            try {
+                return nativeSearchLoader.item.rank(needle, result, 50);
+            } catch (e) {
+                console.warn("launcher: native fzy rank failed, using fallback", e);
             }
         }
 
-        return result.sort((a, b) => launcher.rank(b) - launcher.rank(a)
-            || String(a.name).localeCompare(String(b.name)));
+        return result.filter(entry => launcher.matches(entry))
+            .sort((a, b) => launcher.rank(b) - launcher.rank(a)
+                || String(a.name).localeCompare(String(b.name)))
+            .slice(0, 50);
     }
 
     function moveSelection(delta) {
