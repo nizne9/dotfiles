@@ -9,6 +9,8 @@ Scope {
 
     property real volume: 0
     property bool isMuted: false
+    property int osdSuppressionCount: 0
+    readonly property bool osdSuppressed: osdSuppressionCount > 0
     property var sink: Pipewire.ready ? Pipewire.defaultAudioSink : null
 
     PwObjectTracker {

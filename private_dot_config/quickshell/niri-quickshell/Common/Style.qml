@@ -27,6 +27,18 @@ Singleton {
     readonly property int iconSizeLarge: 28
     readonly property int avatarSize: 24
 
+    // Bar-specific sizing. Keep bar density decisions centralized here instead
+    // of scattering 24/16/6-style constants through Modules/Bar.qml.
+    readonly property int barItemHeight: widgetHeight
+    readonly property int barIconButtonSize: widgetHeight
+    readonly property int barIconSize: iconSize
+    readonly property int barAudioWidth: 70
+    readonly property int barWorkspaceWidth: 26
+    readonly property int barClockWidth: 76
+    readonly property int barGroupSpacing: gapM
+    readonly property int barItemSpacing: gapXS
+    readonly property int statusDotSize: 5
+
     // Panel dimensions
     readonly property int panelWidthS: 280
     readonly property int panelWidthM: 300

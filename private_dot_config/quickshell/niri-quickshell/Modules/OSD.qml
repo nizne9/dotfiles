@@ -2,36 +2,56 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import "../Common"
+import "../Services"
+import "../Widgets"
 
 PanelWindow {
     id: osd
 
-    property string label: ""
-    property real value: 0
-    property string icon: ""
     property bool showing: false
+    property bool windowVisible: false
+
+    readonly property real displayValue: Audio.isMuted ? 0 : Math.max(0, Math.min(1, Audio.volume))
+    readonly property string volumeIcon: {
+        if (Audio.isMuted || Audio.volume <= 0)
+            return "volume-muted";
+        if (Audio.volume < 0.34)
+            return "volume-low";
+        if (Audio.volume < 0.67)
+            return "volume-medium";
+        return "volume-high";
+    }
+    readonly property string displayText: Audio.isMuted ? "Muted" : Math.round(Audio.volume * 100) + "%"
+    readonly property color stateColor: Audio.isMuted ? Theme.urgent : Theme.accent
 
     anchors {
         top: true
         right: true
     }
 
-    implicitWidth: Style.panelWidthS
-    implicitHeight: 64
+    margins {
+        top: Theme.barHeight + Style.gapXS
+        right: Style.gapL
+    }
+
+    implicitWidth: 188
+    implicitHeight: 46
     exclusiveZone: 0
     color: "transparent"
-    visible: showing
+    visible: windowVisible
 
     WlrLayershell.layer: WlrLayer.Overlay
 
-    onShowingChanged: {
-        if (showing)
-            hideTimer.restart();
-    }
-
     Rectangle {
+        id: card
         anchors.fill: parent
+        anchors.margins: Style.gapS
         opacity: osd.showing ? 1 : 0
+        scale: osd.showing ? 1 : 0.96
+        radius: Style.radius
+        color: Theme.surfaceElevated
+        border.color: Theme.border
+        border.width: 1
 
         Behavior on opacity {
             NumberAnimation {
@@ -40,59 +60,72 @@ PanelWindow {
                 easing.bezierCurve: Anims.emphasizedDecel
             }
         }
-        anchors.margins: 8
-        radius: Style.radius
-        color: Theme.background
-        border.color: Theme.border
-        border.width: 1
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: Anims.durShort
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Anims.emphasizedDecel
+            }
+        }
 
         Row {
             anchors {
                 left: parent.left
                 right: parent.right
                 verticalCenter: parent.verticalCenter
-                margins: Style.paddingM
+                leftMargin: Style.paddingM
+                rightMargin: Style.paddingM
             }
-            spacing: Style.gapM
+            spacing: Style.gapS
 
-            Text {
-                text: osd.icon
-                color: Theme.accent
-                font.family: Theme.fontFamily
-                font.pixelSize: 16
-                visible: text.length > 0
+            Icon {
+                name: osd.volumeIcon
+                size: Style.iconSize
+                color: osd.stateColor
+                width: Style.iconSize
+                height: Style.iconSize
                 anchors.verticalCenter: parent.verticalCenter
-            }
-
-            Text {
-                text: osd.label
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
-                anchors.verticalCenter: parent.verticalCenter
-                visible: text.length > 0
             }
 
             Rectangle {
-                width: parent.width - (osd.icon.length > 0 ? 24 : 0) - (osd.label.length > 0 ? osd.label.length * 7 : 0) - Style.gapM * 2
-                height: 6
-                radius: 3
+                width: parent.width - Style.iconSize - valueText.width - parent.spacing * 2
+                height: 4
+                radius: height / 2
                 color: Theme.surface
                 anchors.verticalCenter: parent.verticalCenter
 
                 Rectangle {
-                    width: Math.max(3, parent.width * osd.value)
-                    height: parent.height
-                    radius: 3
-                    color: Theme.accent
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: Math.max(0, parent.width * osd.displayValue)
+                    radius: parent.radius
+                    color: osd.stateColor
+
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: Anims.durShort
+                            easing.type: Easing.Bezier
+                            easing.bezierCurve: Anims.emphasizedDecel
+                        }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: Anims.durShort }
+                    }
                 }
             }
 
             Text {
-                text: Math.round(osd.value * 100) + "%"
-                color: Theme.text
+                id: valueText
+                width: 42
+                text: osd.displayText
+                color: Audio.isMuted ? Theme.urgent : Theme.text
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize
+                horizontalAlignment: Text.AlignRight
+                verticalAlignment: Text.AlignVCenter
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
@@ -100,15 +133,31 @@ PanelWindow {
 
     Timer {
         id: hideTimer
-        interval: 2000
+        interval: 1500
         repeat: false
-        onTriggered: osd.showing = false
+        onTriggered: osd.hide()
     }
 
-    function show(lbl, val, ico) {
-        label = lbl;
-        value = val;
-        icon = ico || "";
+    Timer {
+        id: closeTimer
+        interval: Anims.durShort + 50
+        repeat: false
+        onTriggered: {
+            if (!osd.showing)
+                osd.windowVisible = false;
+        }
+    }
+
+    function showVolume() {
+        closeTimer.stop();
+        windowVisible = true;
         showing = true;
+        hideTimer.restart();
+    }
+
+    function hide() {
+        hideTimer.stop();
+        showing = false;
+        closeTimer.restart();
     }
 }

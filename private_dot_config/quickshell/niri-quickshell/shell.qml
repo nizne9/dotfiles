@@ -4,6 +4,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import "Services"
 import "Modules"
+import "Common"
 
 ShellRoot {
     id: root
@@ -118,12 +119,16 @@ ShellRoot {
     Connections {
         target: Audio
         function onVolumeChanged() {
-            if (osdLoader.active && osdLoader.item)
-                osdLoader.item.show("", Audio.volume, Audio.isMuted ? "M" : "V");
+            if (!Audio.osdSuppressed && osdLoader.active && osdLoader.item)
+                osdLoader.item.showVolume();
         }
         function onIsMutedChanged() {
-            if (osdLoader.active && osdLoader.item)
-                osdLoader.item.show(Audio.isMuted ? "Muted" : "Unmuted", Audio.volume, Audio.isMuted ? "M" : "V");
+            if (!Audio.osdSuppressed && osdLoader.active && osdLoader.item)
+                osdLoader.item.showVolume();
+        }
+        function onOsdSuppressedChanged() {
+            if (Audio.osdSuppressed && osdLoader.active && osdLoader.item)
+                osdLoader.item.hide();
         }
     }
 }

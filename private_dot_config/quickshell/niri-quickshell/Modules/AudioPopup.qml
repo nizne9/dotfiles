@@ -11,6 +11,7 @@ PopupWindow {
     property bool pointerInside: false
     property bool interacting: false
     property real localVolume: Audio.volume
+    property bool suppressingOsd: false
 
     readonly property bool interactive: pointerInside || interacting
     readonly property string volumeIcon: {
@@ -29,6 +30,7 @@ PopupWindow {
     visible: showing
 
     onShowingChanged: {
+        setOsdSuppressed(showing);
         if (showing) {
             localVolume = Audio.volume;
             restartHideTimer();
@@ -38,6 +40,8 @@ PopupWindow {
             interacting = false;
         }
     }
+
+    Component.onDestruction: setOsdSuppressed(false)
 
     onInteractiveChanged: restartHideTimer()
 
@@ -213,6 +217,13 @@ PopupWindow {
         } else {
             hideTimer.restart();
         }
+    }
+
+    function setOsdSuppressed(suppressed) {
+        if (suppressingOsd === suppressed)
+            return;
+        suppressingOsd = suppressed;
+        Audio.osdSuppressionCount = Math.max(0, Audio.osdSuppressionCount + (suppressed ? 1 : -1));
     }
 
     function show() {
