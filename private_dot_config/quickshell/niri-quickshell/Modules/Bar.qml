@@ -180,8 +180,12 @@ PanelWindow {
             Rectangle {
                 id: trayGroup
 
-                visible: trayRow.implicitWidth > 0
-                width: visible ? trayRow.implicitWidth + Style.paddingS * 2 : 0
+                readonly property bool hasSystemItems: systemTrayRow.implicitWidth > 0
+                readonly property bool hasAppItems: appTrayRow.implicitWidth > 0
+                readonly property bool hasDivider: hasSystemItems && hasAppItems
+
+                visible: hasSystemItems || hasAppItems
+                width: visible ? systemTrayRow.implicitWidth + appTrayRow.implicitWidth + (hasDivider ? Style.gapXS + trayDivider.width + Style.gapXS : 0) + Style.barTrayInnerPadding * 2 : 0
                 height: Style.barItemHeight
                 radius: Theme.radius
                 color: Theme.surface
@@ -191,60 +195,141 @@ PanelWindow {
                     anchors.centerIn: parent
                     spacing: 0
 
-                    Repeater {
-                        model: SystemTray.items
+                    Row {
+                        id: appTrayRow
+                        spacing: 0
 
-                        Item {
-                            id: trayItem
+                        Repeater {
+                            model: SystemTray.items
 
-                            // Guard against null modelData during Repeater regeneration
-                            // when SystemTray.items resets on startup or tray changes.
-                            readonly property var item: modelData || null
-                            readonly property bool active: item && item.status !== Status.Passive
-                            readonly property bool needsAttention: item && item.status === Status.NeedsAttention
+                            Item {
+                                id: appTrayItem
 
-                            width: active ? Style.barIconButtonSize : 0
-                            height: Style.barItemHeight
-                            visible: active
+                                // Application tray items such as Remmina are still accessible
+                                // but de-emphasized; they are not system state like bluetooth/network.
+                                readonly property var item: modelData || null
+                                readonly property bool active: item ? item.status !== Status.Passive : false
+                                readonly property bool appItem: item ? item.category === Category.ApplicationStatus || item.category === Category.Communications : false
+                                readonly property bool needsAttention: item ? item.status === Status.NeedsAttention : false
 
-                            Rectangle {
-                                anchors.centerIn: parent
-                                width: parent.width - 2
-                                height: parent.height - 2
-                                radius: Style.radiusS
-                                color: trayHover.hovered ? Theme.surfaceElevated : "transparent"
-                                border.color: trayItem.needsAttention ? Theme.urgent : "transparent"
-                                border.width: trayItem.needsAttention ? 1 : 0
-                            }
+                                width: active && appItem ? Style.barIconButtonSize : 0
+                                height: Style.barItemHeight
+                                visible: active && appItem
+                                opacity: needsAttention ? 1 : Style.barAppTrayOpacity
 
-                            IconImage {
-                                anchors.centerIn: parent
-                                width: Style.barIconSize
-                                height: Style.barIconSize
-                                source: trayItem.item.icon || ""
-                            }
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: parent.width - 2
+                                    height: parent.height - 2
+                                    radius: Style.radiusS
+                                    color: appTrayHover.hovered ? Theme.surfaceElevated : "transparent"
+                                    border.color: appTrayItem.needsAttention ? Theme.urgent : "transparent"
+                                    border.width: appTrayItem.needsAttention ? 1 : 0
+                                }
 
-                            HoverHandler {
-                                id: trayHover
-                            }
+                                IconImage {
+                                    anchors.centerIn: parent
+                                    width: Style.barIconSize
+                                    height: Style.barIconSize
+                                    source: appTrayItem.item ? appTrayItem.item.icon : ""
+                                }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                                onClicked: event => {
-                                    if (!trayItem.item)
-                                        return;
-                                    const point = trayItem.mapToItem(null, trayItem.width / 2, trayItem.height);
-                                    if ((event.button === Qt.RightButton || trayItem.item.onlyMenu) && trayItem.item.hasMenu) {
-                                        trayItem.item.display(bar, point.x, point.y);
-                                    } else if (event.button === Qt.MiddleButton) {
-                                        trayItem.item.secondaryActivate();
-                                    } else {
-                                        trayItem.item.activate();
-                                    }
+                                HoverHandler {
+                                    id: appTrayHover
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                                    onClicked: event => trayGroup.activateItem(appTrayItem, event)
                                 }
                             }
                         }
+                    }
+
+                    Item {
+                        width: trayGroup.hasDivider ? Style.gapXS : 0
+                        height: 1
+                    }
+
+                    Rectangle {
+                        id: trayDivider
+                        visible: trayGroup.hasDivider
+                        width: visible ? 1 : 0
+                        height: Style.barIconSize
+                        radius: width / 2
+                        color: Theme.border
+                        opacity: 0.6
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Item {
+                        width: trayGroup.hasDivider ? Style.gapXS : 0
+                        height: 1
+                    }
+
+                    Row {
+                        id: systemTrayRow
+                        spacing: 0
+
+                        Repeater {
+                            model: SystemTray.items
+
+                            Item {
+                                id: systemTrayItem
+
+                                // Keep hardware/system-service indicators visually primary.
+                                readonly property var item: modelData || null
+                                readonly property bool active: item ? item.status !== Status.Passive : false
+                                readonly property bool systemItem: item ? item.category !== Category.ApplicationStatus && item.category !== Category.Communications : false
+                                readonly property bool needsAttention: item ? item.status === Status.NeedsAttention : false
+
+                                width: active && systemItem ? Style.barIconButtonSize : 0
+                                height: Style.barItemHeight
+                                visible: active && systemItem
+
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: parent.width - 2
+                                    height: parent.height - 2
+                                    radius: Style.radiusS
+                                    color: systemTrayHover.hovered ? Theme.surfaceElevated : "transparent"
+                                    border.color: systemTrayItem.needsAttention ? Theme.urgent : "transparent"
+                                    border.width: systemTrayItem.needsAttention ? 1 : 0
+                                }
+
+                                IconImage {
+                                    anchors.centerIn: parent
+                                    width: Style.barIconSize
+                                    height: Style.barIconSize
+                                    source: systemTrayItem.item ? systemTrayItem.item.icon : ""
+                                }
+
+                                HoverHandler {
+                                    id: systemTrayHover
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                                    onClicked: event => trayGroup.activateItem(systemTrayItem, event)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                function activateItem(trayItem, event) {
+                    if (!trayItem.item)
+                        return;
+
+                    const point = trayItem.mapToItem(null, trayItem.width / 2, trayItem.height);
+                    if ((event.button === Qt.RightButton || trayItem.item.onlyMenu) && trayItem.item.hasMenu) {
+                        trayItem.item.display(bar, point.x, point.y);
+                    } else if (event.button === Qt.MiddleButton) {
+                        trayItem.item.secondaryActivate();
+                    } else {
+                        trayItem.item.activate();
                     }
                 }
             }

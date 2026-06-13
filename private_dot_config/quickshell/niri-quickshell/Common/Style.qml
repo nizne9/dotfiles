@@ -37,6 +37,8 @@ Singleton {
     readonly property int barClockWidth: 76
     readonly property int barGroupSpacing: gapM
     readonly property int barItemSpacing: gapXS
+    readonly property int barTrayInnerPadding: paddingS
+    readonly property real barAppTrayOpacity: 0.72
     readonly property int statusDotSize: 5
 
     // Panel dimensions
