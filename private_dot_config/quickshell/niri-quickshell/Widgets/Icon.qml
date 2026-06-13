@@ -28,10 +28,18 @@ Text {
             return "\uf04b";
         case "pause":
             return "\uf04c";
+        case "audio":
+        case "speaker":
+            return "\uf025";
         case "volume-high":
             return "\uf028";
+        case "volume-medium":
+            return "\uf027";
+        case "volume-low":
         case "volume-muted":
             return "\uf026";
+        case "volume-off":
+            return "\uf6a9";
         default:
             return iconName;
         }

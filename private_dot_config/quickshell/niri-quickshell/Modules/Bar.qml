@@ -55,7 +55,8 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: audioPopup.show()
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: audioPopup.toggle()
                 }
             }
 

@@ -9,16 +9,20 @@ Scope {
 
     property real volume: 0
     property bool isMuted: false
-    property var sink: Pipewire.defaultAudioSink
+    property var sink: Pipewire.ready ? Pipewire.defaultAudioSink : null
+
+    PwObjectTracker {
+        objects: service.sink ? [service.sink] : []
+    }
 
     function setVolume(val) {
-        if (!sink || !sink.audio)
+        if (!sink || !sink.ready || !sink.audio)
             return;
         sink.audio.volume = Math.max(0, Math.min(1, val));
     }
 
     function toggleMute() {
-        if (!sink || !sink.audio)
+        if (!sink || !sink.ready || !sink.audio)
             return;
         sink.audio.muted = !sink.audio.muted;
     }
@@ -28,7 +32,7 @@ Scope {
         if (s !== sink) {
             sink = s;
         }
-        if (sink && sink.audio) {
+        if (sink && sink.ready && sink.audio) {
             volume = sink.audio.volume;
             isMuted = sink.audio.muted;
         }
@@ -37,16 +41,22 @@ Scope {
     Connections {
         target: Pipewire
         function onDefaultAudioSinkChanged() { service.updateSink(); }
+        function onReadyChanged() { service.updateSink(); }
     }
 
     Connections {
-        target: sink ? sink.audio : null
+        target: sink
+        function onReadyChanged() { service.updateSink(); }
+    }
+
+    Connections {
+        target: sink && sink.ready ? sink.audio : null
         function onVolumesChanged() {
-            if (sink && sink.audio)
+            if (sink && sink.ready && sink.audio)
                 service.volume = sink.audio.volume;
         }
         function onMutedChanged() {
-            if (sink && sink.audio)
+            if (sink && sink.ready && sink.audio)
                 service.isMuted = sink.audio.muted;
         }
     }
