@@ -38,7 +38,10 @@ Singleton {
     readonly property int barGroupSpacing: gapM
     readonly property int barItemSpacing: gapXS
     readonly property int barTrayInnerPadding: paddingS
-    readonly property real barAppTrayOpacity: 0.72
+    readonly property int trayOverflowWidth: 34
+    readonly property int trayOverflowPopupWidth: 240
+    readonly property int trayOverflowRowHeight: 34
+    readonly property int trayOverflowMaxVisibleRows: 8
     readonly property int statusDotSize: 5
 
     // Panel dimensions

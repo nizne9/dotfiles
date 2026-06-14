@@ -180,143 +180,209 @@ PanelWindow {
             Rectangle {
                 id: trayGroup
 
-                readonly property bool hasSystemItems: systemTrayRow.implicitWidth > 0
-                readonly property bool hasAppItems: appTrayRow.implicitWidth > 0
-                readonly property bool hasDivider: hasSystemItems && hasAppItems
+                readonly property var hiddenPatterns: []
+                readonly property var pinnedInlinePatterns: []
+                readonly property var primarySystemPatterns: [
+                    "network", "nm-applet", "networkmanager", "wireless", "wifi", "wlan", "ethernet", "vpn",
+                    "bluetooth", "blueman", "bluez",
+                    "fcitx", "rime", "ibus", "input method", "keyboard layout", "kbd"
+                ]
 
-                visible: hasSystemItems || hasAppItems
-                width: visible ? systemTrayRow.implicitWidth + appTrayRow.implicitWidth + (hasDivider ? Style.gapXS + trayDivider.width + Style.gapXS : 0) + Style.barTrayInnerPadding * 2 : 0
+                property var overflowItems: []
+
+                readonly property bool hasInlineItems: inlineTrayRow.implicitWidth > 0
+                readonly property bool hasOverflowItems: overflowItems.length > 0
+                readonly property bool overflowNeedsAttention: hasOverflowItems && overflowItems.some(item => item && item.status === Status.NeedsAttention)
+
+                visible: hasInlineItems || hasOverflowItems
+                width: visible ? inlineTrayRow.implicitWidth + (hasOverflowItems ? Style.trayOverflowWidth : 0) + Style.barTrayInnerPadding * 2 : 0
                 height: Style.barItemHeight
                 radius: Theme.radius
                 color: Theme.surface
+
+                Repeater {
+                    id: trayStatusWatcher
+                    model: SystemTray.items
+
+                    Item {
+                        readonly property var item: modelData || null
+
+                        Connections {
+                            target: item
+                            enabled: !!item
+                            function onIconChanged() { trayGroup.schedulePolicyUpdate(); }
+                            function onStatusChanged() { trayGroup.schedulePolicyUpdate(); }
+                            function onCategoryChanged() { trayGroup.schedulePolicyUpdate(); }
+                            function onIdChanged() { trayGroup.schedulePolicyUpdate(); }
+                            function onTitleChanged() { trayGroup.schedulePolicyUpdate(); }
+                            function onTooltipTitleChanged() { trayGroup.schedulePolicyUpdate(); }
+                        }
+                    }
+                }
+
+                Connections {
+                    target: SystemTray.items
+                    function onValuesChanged() { trayGroup.schedulePolicyUpdate(); }
+                }
+
+                Component.onCompleted: schedulePolicyUpdate()
 
                 Row {
                     id: trayRow
                     anchors.centerIn: parent
                     spacing: 0
 
-                    Row {
-                        id: appTrayRow
-                        spacing: 0
-
-                        Repeater {
-                            model: SystemTray.items
-
-                            Item {
-                                id: appTrayItem
-
-                                // Application tray items such as Remmina are still accessible
-                                // but de-emphasized; they are not system state like bluetooth/network.
-                                readonly property var item: modelData || null
-                                readonly property bool active: item ? item.status !== Status.Passive : false
-                                readonly property bool appItem: item ? item.category === Category.ApplicationStatus || item.category === Category.Communications : false
-                                readonly property bool needsAttention: item ? item.status === Status.NeedsAttention : false
-
-                                width: active && appItem ? Style.barIconButtonSize : 0
-                                height: Style.barItemHeight
-                                visible: active && appItem
-                                opacity: needsAttention ? 1 : Style.barAppTrayOpacity
-
-                                Rectangle {
-                                    anchors.centerIn: parent
-                                    width: parent.width - 2
-                                    height: parent.height - 2
-                                    radius: Style.radiusS
-                                    color: appTrayHover.hovered ? Theme.surfaceElevated : "transparent"
-                                    border.color: appTrayItem.needsAttention ? Theme.urgent : "transparent"
-                                    border.width: appTrayItem.needsAttention ? 1 : 0
-                                }
-
-                                IconImage {
-                                    anchors.centerIn: parent
-                                    width: Style.barIconSize
-                                    height: Style.barIconSize
-                                    source: appTrayItem.item ? appTrayItem.item.icon : ""
-                                }
-
-                                HoverHandler {
-                                    id: appTrayHover
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                                    onClicked: event => trayGroup.activateItem(appTrayItem, event)
-                                }
-                            }
-                        }
-                    }
-
-                    Item {
-                        width: trayGroup.hasDivider ? Style.gapXS : 0
-                        height: 1
-                    }
-
                     Rectangle {
-                        id: trayDivider
-                        visible: trayGroup.hasDivider
-                        width: visible ? 1 : 0
-                        height: Style.barIconSize
-                        radius: width / 2
-                        color: Theme.border
-                        opacity: 0.6
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+                        id: overflowButton
 
-                    Item {
-                        width: trayGroup.hasDivider ? Style.gapXS : 0
-                        height: 1
+                        visible: trayGroup.hasOverflowItems
+                        width: visible ? Style.trayOverflowWidth : 0
+                        height: Style.barItemHeight
+                        radius: Style.radiusS
+                        color: overflowHover.hovered || trayOverflow.showing ? Theme.surfaceElevated : "transparent"
+                        border.color: trayGroup.overflowNeedsAttention ? Theme.urgent : "transparent"
+                        border.width: trayGroup.overflowNeedsAttention ? 1 : 0
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "+" + trayGroup.overflowItems.length
+                            color: trayGroup.overflowNeedsAttention ? Theme.urgent : Theme.muted
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                            font.weight: Font.Medium
+                        }
+
+                        HoverHandler {
+                            id: overflowHover
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: trayOverflow.toggle()
+                        }
                     }
 
                     Row {
-                        id: systemTrayRow
+                        id: inlineTrayRow
                         spacing: 0
 
                         Repeater {
                             model: SystemTray.items
 
                             Item {
-                                id: systemTrayItem
+                                id: inlineTrayItem
 
-                                // Keep hardware/system-service indicators visually primary.
                                 readonly property var item: modelData || null
-                                readonly property bool active: item ? item.status !== Status.Passive : false
-                                readonly property bool systemItem: item ? item.category !== Category.ApplicationStatus && item.category !== Category.Communications : false
+                                readonly property bool inlineItem: trayGroup.isInlineItem(item)
                                 readonly property bool needsAttention: item ? item.status === Status.NeedsAttention : false
 
-                                width: active && systemItem ? Style.barIconButtonSize : 0
+                                width: inlineItem ? Style.barIconButtonSize : 0
                                 height: Style.barItemHeight
-                                visible: active && systemItem
+                                visible: inlineItem
 
                                 Rectangle {
                                     anchors.centerIn: parent
                                     width: parent.width - 2
                                     height: parent.height - 2
                                     radius: Style.radiusS
-                                    color: systemTrayHover.hovered ? Theme.surfaceElevated : "transparent"
-                                    border.color: systemTrayItem.needsAttention ? Theme.urgent : "transparent"
-                                    border.width: systemTrayItem.needsAttention ? 1 : 0
+                                    color: inlineTrayHover.hovered ? Theme.surfaceElevated : "transparent"
+                                    border.color: inlineTrayItem.needsAttention ? Theme.urgent : "transparent"
+                                    border.width: inlineTrayItem.needsAttention ? 1 : 0
                                 }
 
                                 IconImage {
                                     anchors.centerIn: parent
                                     width: Style.barIconSize
                                     height: Style.barIconSize
-                                    source: systemTrayItem.item ? systemTrayItem.item.icon : ""
+                                    source: inlineTrayItem.item ? inlineTrayItem.item.icon : ""
                                 }
 
                                 HoverHandler {
-                                    id: systemTrayHover
+                                    id: inlineTrayHover
                                 }
 
                                 MouseArea {
                                     anchors.fill: parent
                                     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                                    onClicked: event => trayGroup.activateItem(systemTrayItem, event)
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: event => trayGroup.activateItem(inlineTrayItem, event)
                                 }
                             }
                         }
                     }
+                }
+
+                Timer {
+                    id: policyUpdateTimer
+                    interval: 0
+                    repeat: false
+                    onTriggered: trayGroup.updateOverflowItems()
+                }
+
+                function schedulePolicyUpdate() {
+                    policyUpdateTimer.restart();
+                }
+
+                function itemKey(item) {
+                    if (!item)
+                        return "";
+                    return ((item.id || "") + " " + (item.title || "") + " " + (item.tooltipTitle || "") + " " + (item.icon || "")).toLowerCase();
+                }
+
+                function keyHasAny(key, words) {
+                    for (let i = 0; i < words.length; i++) {
+                        if (key.indexOf(words[i]) !== -1)
+                            return true;
+                    }
+                    return false;
+                }
+
+                function isExplicitlyHidden(item) {
+                    const key = itemKey(item);
+                    return keyHasAny(key, hiddenPatterns);
+                }
+
+                function isPinnedInline(item) {
+                    const key = itemKey(item);
+                    return keyHasAny(key, pinnedInlinePatterns);
+                }
+
+                function isPrimarySystemItem(item) {
+                    if (!item)
+                        return false;
+
+                    const key = itemKey(item);
+                    if (keyHasAny(key, primarySystemPatterns))
+                        return true;
+
+                    return false;
+                }
+
+                function isInlineItem(item) {
+                    if (!item || item.status === Status.Passive || isExplicitlyHidden(item))
+                        return false;
+                    if (isPinnedInline(item))
+                        return true;
+                    return isPrimarySystemItem(item);
+                }
+
+                function isOverflowItem(item) {
+                    if (!item || item.status === Status.Passive || isExplicitlyHidden(item))
+                        return false;
+                    return !isInlineItem(item);
+                }
+
+                function updateOverflowItems() {
+                    const values = SystemTray.items.values || [];
+                    const items = [];
+                    for (let i = 0; i < values.length; i++) {
+                        const item = values[i];
+                        if (isOverflowItem(item))
+                            items.push(item);
+                    }
+                    overflowItems = items;
                 }
 
                 function activateItem(trayItem, event) {
@@ -380,6 +446,15 @@ PanelWindow {
                 }
             }
         }
+    }
+
+    TrayOverflowPopup {
+        id: trayOverflow
+        items: trayGroup.overflowItems
+        anchor.window: bar
+        anchor.rect.x: Math.max(Style.gapM, trayGroup.mapToItem(null, 0, 0).x)
+        anchor.rect.y: Theme.barHeight
+        onItemsChanged: if (items.length === 0) close()
     }
 
     AudioPopup {
