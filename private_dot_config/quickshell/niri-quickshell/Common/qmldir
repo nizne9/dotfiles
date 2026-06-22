@@ -2,3 +2,4 @@ singleton Config Config.qml
 singleton Theme Theme.qml
 singleton Anims Anims.qml
 singleton Style Style.qml
+singleton TrayLabelOverrides TrayLabelOverrides.qml

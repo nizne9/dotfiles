@@ -227,6 +227,13 @@ PanelWindow {
 
                 Component.onCompleted: schedulePolicyUpdate()
 
+                Timer {
+                    id: policyUpdateTimer
+                    interval: 0
+                    repeat: false
+                    onTriggered: trayGroup.updateOverflowItems()
+                }
+
                 Row {
                     id: trayRow
                     anchors.centerIn: parent
@@ -312,13 +319,6 @@ PanelWindow {
                             }
                         }
                     }
-                }
-
-                Timer {
-                    id: policyUpdateTimer
-                    interval: 0
-                    repeat: false
-                    onTriggered: trayGroup.updateOverflowItems()
                 }
 
                 function schedulePolicyUpdate() {

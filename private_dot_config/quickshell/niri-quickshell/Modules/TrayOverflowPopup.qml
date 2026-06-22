@@ -107,6 +107,12 @@ PopupWindow {
         if (!item)
             return "";
 
+        // Step 1: check user-configured overrides first.
+        const overridden = TrayLabelOverrides.lookup(item);
+        if (overridden.length > 0)
+            return overridden;
+
+        // Step 2: try SNI metadata with garbage-name filtering.
         const tooltip = ((item.tooltipTitle || "") + "").trim();
         if (tooltip.length > 0 && !isGarbageTrayName(tooltip))
             return tooltip;
