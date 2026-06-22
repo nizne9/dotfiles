@@ -45,6 +45,7 @@ PopupWindow {
 
                         readonly property var item: modelData || null
                         readonly property string label: popup.itemLabel(item)
+                        readonly property bool hasLabel: label.length > 0
                         readonly property bool needsAttention: item ? item.status === Status.NeedsAttention : false
 
                         width: listColumn.width
@@ -72,6 +73,7 @@ PopupWindow {
                             }
 
                             Text {
+                                visible: row.hasLabel
                                 width: parent.width - Style.barIconSize - parent.spacing
                                 text: row.label
                                 color: row.needsAttention ? Theme.urgent : Theme.text
@@ -98,9 +100,12 @@ PopupWindow {
         }
     }
 
+    // Returns a user-facing label for a tray item, or an empty string when
+    // all available metadata is garbage (e.g. Electron's "chrome_status_icon_1")
+    // so the icon alone identifies the app.
     function itemLabel(item) {
         if (!item)
-            return "Tray item";
+            return "";
 
         const tooltip = ((item.tooltipTitle || "") + "").trim();
         if (tooltip.length > 0 && !isGarbageTrayName(tooltip))
@@ -114,13 +119,13 @@ PopupWindow {
         if (id.length > 0 && !isGarbageTrayName(id))
             return id;
 
-        return "App indicator";
+        return "";
     }
 
     // Electron's StatusNotifierItem implementation reports a generic
     // "chrome_status_icon_N" id/title for every Electron app (see
     // electron/electron#40936). Other tray libraries follow similar patterns.
-    // Treat these as missing names so a sensible fallback is shown instead.
+    // Treat these as missing names so the icon alone identifies the app.
     function isGarbageTrayName(name) {
         if (!name)
             return true;
