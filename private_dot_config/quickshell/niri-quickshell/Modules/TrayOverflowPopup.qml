@@ -101,7 +101,30 @@ PopupWindow {
     function itemLabel(item) {
         if (!item)
             return "Tray item";
-        return item.tooltipTitle || item.title || item.id || "Tray item";
+
+        const tooltip = ((item.tooltipTitle || "") + "").trim();
+        if (tooltip.length > 0 && !isGarbageTrayName(tooltip))
+            return tooltip;
+
+        const title = ((item.title || "") + "").trim();
+        if (title.length > 0 && !isGarbageTrayName(title))
+            return title;
+
+        const id = ((item.id || "") + "").trim();
+        if (id.length > 0 && !isGarbageTrayName(id))
+            return id;
+
+        return "App indicator";
+    }
+
+    // Electron's StatusNotifierItem implementation reports a generic
+    // "chrome_status_icon_N" id/title for every Electron app (see
+    // electron/electron#40936). Other tray libraries follow similar patterns.
+    // Treat these as missing names so a sensible fallback is shown instead.
+    function isGarbageTrayName(name) {
+        if (!name)
+            return true;
+        return /^(chrome_status_icon|status_icon|appindicator|app[-_]indicator|tray[-_]icon)([-_]\d+)?$/i.test(name);
     }
 
     function activateItem(row, event) {
