@@ -9,7 +9,35 @@ PopupWindow {
 
     property bool showing: false
     property var items: []
-    implicitWidth: Style.trayOverflowPopupWidth
+
+    // Measure text labels to size popup to content instead of a fixed width.
+    TextMetrics {
+        id: labelMetrics
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+    }
+
+    // Content width from items: widest label + icon + spacing + row padding.
+    readonly property int contentWidth: {
+        let maxLabel = 0;
+        let anyLabel = false;
+        for (let i = 0; i < items.length; i++) {
+            const lbl = itemLabel(items[i]);
+            if (lbl.length > 0) {
+                anyLabel = true;
+                labelMetrics.text = lbl;
+                if (labelMetrics.width > maxLabel)
+                    maxLabel = labelMetrics.width;
+            }
+        }
+        if (!anyLabel)
+            return Style.trayOverflowIconOnlyWidth;
+        // icon + spacing + label + left/right padding + a bit of breathing room
+        const natural = Style.paddingS * 2 + Style.barIconSize + Style.gapS + maxLabel + Style.paddingS;
+        return Math.max(Style.trayOverflowIconOnlyWidth, Math.min(natural, Style.trayOverflowPopupWidth));
+    }
+
+    implicitWidth: contentWidth
     implicitHeight: Math.min(Style.trayOverflowRowHeight * Style.trayOverflowMaxVisibleRows + Style.paddingM * 2 + Style.gapS * 2, overflowList.contentHeight + Style.paddingM * 2 + Style.gapS * 2)
     color: "transparent"
     visible: showing && items.length > 0
