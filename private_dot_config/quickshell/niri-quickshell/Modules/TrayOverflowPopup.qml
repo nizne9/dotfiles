@@ -27,7 +27,6 @@ PopupWindow {
     Rectangle {
         id: card
         anchors.fill: parent
-        anchors.margins: Style.gapS
         radius: Style.radiusL
         color: Theme.surfaceElevated
         border.color: Theme.border
