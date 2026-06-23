@@ -39,8 +39,8 @@ Singleton {
     readonly property int barItemSpacing: gapXS
     readonly property int barTrayInnerPadding: paddingS
     readonly property int trayOverflowWidth: 34
-    readonly property int trayOverflowIconOnlyWidth: 64
-    readonly property int trayOverflowRowHeight: 34
+    readonly property int trayOverflowGridColumns: 5
+    readonly property int trayOverflowCellSize: 26
     readonly property int trayOverflowMaxVisibleRows: 8
     readonly property int statusDotSize: 5
 

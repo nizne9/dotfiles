@@ -10,11 +10,15 @@ PopupWindow {
     property bool showing: false
     property var items: []
 
-    implicitWidth: Style.trayOverflowIconOnlyWidth
-    implicitHeight: Math.min(
-        Style.trayOverflowRowHeight * Style.trayOverflowMaxVisibleRows + Style.paddingM * 2 + Style.gapS * 2,
-        overflowList.contentHeight + Style.paddingM * 2 + Style.gapS * 2
-    )
+    // Grid layout: up to N columns, wrap to next row.
+    readonly property int columns: Math.max(1, Math.min(Style.trayOverflowGridColumns, items.length))
+    readonly property int rows: Math.ceil(items.length / columns)
+    readonly property int cellSize: Style.trayOverflowCellSize
+    readonly property int cellSpacing: Style.gapXS
+    readonly property int popupPadding: Style.paddingM
+
+    implicitWidth: columns * cellSize + (columns - 1) * cellSpacing + popupPadding * 2
+    implicitHeight: rows * cellSize + (rows - 1) * cellSpacing + popupPadding * 2
     color: "transparent"
     visible: showing && items.length > 0
 
@@ -29,64 +33,58 @@ PopupWindow {
         border.color: Theme.border
         border.width: 1
 
-        Flickable {
-            id: overflowList
-            anchors.fill: parent
-            anchors.margins: Style.paddingM
-            contentHeight: listColumn.implicitHeight
-            clip: true
+        Grid {
+            id: iconGrid
+            anchors.centerIn: parent
+            columns: popup.columns
+            spacing: popup.cellSpacing
+            rowSpacing: popup.cellSpacing
 
-            Column {
-                id: listColumn
-                width: overflowList.width
-                spacing: Style.gapXS
+            Repeater {
+                model: popup.items
 
-                Repeater {
-                    model: popup.items
+                Rectangle {
+                    id: cell
+                    readonly property var item: modelData || null
+                    readonly property bool needsAttention: item ? item.status === Status.NeedsAttention : false
 
-                    Rectangle {
-                        id: row
-                        readonly property var item: modelData || null
-                        readonly property bool needsAttention: item ? item.status === Status.NeedsAttention : false
+                    width: popup.cellSize
+                    height: popup.cellSize
+                    radius: Style.radius
+                    color: cellHover.hovered ? Theme.surface : "transparent"
+                    border.color: needsAttention ? Theme.urgent : "transparent"
+                    border.width: needsAttention ? 1 : 0
 
-                        width: listColumn.width
-                        height: Style.trayOverflowRowHeight
-                        radius: Style.radius
-                        color: rowHover.hovered ? Theme.surface : "transparent"
-                        border.color: needsAttention ? Theme.urgent : "transparent"
-                        border.width: needsAttention ? 1 : 0
+                    IconImage {
+                        width: Style.barIconSize
+                        height: Style.barIconSize
+                        source: cell.item ? cell.item.icon : ""
+                        anchors.centerIn: parent
+                    }
 
-                        IconImage {
-                            width: Style.barIconSize
-                            height: Style.barIconSize
-                            source: row.item ? row.item.icon : ""
-                            anchors.centerIn: parent
-                        }
+                    HoverHandler { id: cellHover }
 
-                        HoverHandler { id: rowHover }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: event => popup.activateItem(row, event)
-                        }
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: event => popup.activateItem(cell, event)
                     }
                 }
             }
         }
     }
 
-    function activateItem(row, event) {
-        if (!row.item)
+    function activateItem(cell, event) {
+        if (!cell.item)
             return;
-        const point = row.mapToItem(null, row.width / 2, row.height / 2);
-        if ((event.button === Qt.RightButton || row.item.onlyMenu) && row.item.hasMenu) {
-            row.item.display(popup, point.x, point.y);
+        const point = cell.mapToItem(null, cell.width / 2, cell.height / 2);
+        if ((event.button === Qt.RightButton || cell.item.onlyMenu) && cell.item.hasMenu) {
+            cell.item.display(popup, point.x, point.y);
         } else if (event.button === Qt.MiddleButton) {
-            row.item.secondaryActivate();
+            cell.item.secondaryActivate();
         } else {
-            row.item.activate();
+            cell.item.activate();
             showing = false;
         }
     }

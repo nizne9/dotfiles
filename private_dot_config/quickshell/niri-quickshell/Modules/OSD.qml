@@ -34,8 +34,8 @@ PanelWindow {
         right: Style.gapL
     }
 
-    implicitWidth: 188
-    implicitHeight: 46
+    implicitWidth: 184
+    implicitHeight: 42
     exclusiveZone: 0
     color: "transparent"
     visible: windowVisible
@@ -49,7 +49,7 @@ PanelWindow {
         opacity: osd.showing ? 1 : 0
         scale: osd.showing ? 1 : 0.96
         radius: Style.radius
-        color: Theme.surfaceElevated
+        color: Theme.surface
         border.color: Theme.border
         border.width: 1
 
@@ -77,9 +77,10 @@ PanelWindow {
                 leftMargin: Style.paddingM
                 rightMargin: Style.paddingM
             }
-            spacing: Style.gapS
+            spacing: 0
 
             Icon {
+                id: osdIcon
                 name: osd.volumeIcon
                 size: Style.iconSize
                 color: osd.stateColor
@@ -88,11 +89,17 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
+            Item {
+                width: Style.gapS
+                height: 1
+            }
+
             Rectangle {
-                width: parent.width - Style.iconSize - valueText.width - parent.spacing * 2
+                id: progressBar
+                width: 84
                 height: 4
                 radius: height / 2
-                color: Theme.surface
+                color: Theme.surfaceElevated
                 anchors.verticalCenter: parent.verticalCenter
 
                 Rectangle {
@@ -115,6 +122,11 @@ PanelWindow {
                         ColorAnimation { duration: Anims.durShort }
                     }
                 }
+            }
+
+            Item {
+                width: parent.width - osdIcon.width - progressBar.width - valueText.width - Style.gapS
+                height: 1
             }
 
             Text {
