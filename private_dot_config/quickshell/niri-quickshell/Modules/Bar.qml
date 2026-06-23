@@ -452,7 +452,7 @@ PanelWindow {
         id: trayOverflow
         items: trayGroup.overflowItems
         anchor.window: bar
-        anchor.rect.x: Math.max(Style.gapM, bar.width - Style.gapM - Style.barClockWidth - Style.barGroupSpacing - Style.trayOverflowPopupWidth)
+        anchor.rect.x: overflowButton.mapToItem(null, 0, 0).x + overflowButton.width - Style.trayOverflowIconOnlyWidth
         anchor.rect.y: Theme.barHeight
         onItemsChanged: if (items.length === 0) close()
     }
