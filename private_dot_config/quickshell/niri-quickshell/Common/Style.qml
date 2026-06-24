@@ -42,6 +42,7 @@ Singleton {
     readonly property int trayOverflowGridColumns: 5
     readonly property int trayOverflowCellSize: 26
     readonly property int trayOverflowMaxVisibleRows: 8
+    readonly property int popupBarOffset: 30
     readonly property int statusDotSize: 5
 
     // Panel dimensions

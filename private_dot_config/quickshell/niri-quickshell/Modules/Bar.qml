@@ -452,11 +452,10 @@ PanelWindow {
         id: trayOverflow
         items: trayGroup.overflowItems
         anchor.window: bar
-        // Right edge of popup aligns with right edge of the overflow button,
-        // so the grid expands to the left (doesn't cover visible status icons
-        // to the right of the +N button, and doesn't stick out past the bar).
-        anchor.rect.x: Math.max(Style.gapM, overflowButton.mapToItem(null, 0, 0).x + overflowButton.width - implicitWidth)
-        anchor.rect.y: Theme.barHeight
+        anchor.item: overflowButton
+        anchor.edges: Edges.Bottom
+        anchor.gravity: Edges.Bottom
+        anchor.margins.top: Style.popupBarOffset
         onItemsChanged: if (items.length === 0) close()
     }
 
