@@ -3,9 +3,21 @@
 // Check the wiki for a full description of the configuration:
 // https://yalter.github.io/niri/Configuration:-Introduction
 environment {
-    LANG "zh_CN.UTF-8"
-    QT_QPA_PLATFORMTHEME "gtk3"
+    // SHLVL workaround: niri-session inherits SHLVL=1 from the login shell,
+    // which makes asciiship/Zim prompts display "(2)" in terminals (false
+    // nested-shell indicator). See niri issue #3732.
+    // This MUST stay in niri's environment block (not in environment.d)
+    // because it specifically overrides niri-session's behavior.
     SHLVL "0"
+
+    // LANG is scoped to niri's direct children so GUI apps get Chinese UI,
+    // while system tools / shells keep en_US.UTF-8 from /etc/locale.conf
+    // (better for parsing, tooling, error messages).
+    LANG "zh_CN.UTF-8"
+
+    // Other env vars (QT_QPA_PLATFORMTHEME, XMODIFIERS, etc.) live in
+    // ~/.config/environment.d/ so they reach systemd user services and
+    // D-Bus activated processes, not just niri's direct children.
 }
 
 // Input device configuration.
@@ -121,37 +133,6 @@ output "DP-1" {
     // If the position is unset or results in an overlap, the output is instead placed
     // automatically.
     position x=1462 y=0
-}
-
-/-output "DP-2" {
-    // Uncomment this line to disable this output.
-    // off
-
-    // Resolution and, optionally, refresh rate of the output.
-    // The format is "<width>x<height>" or "<width>x<height>@<refresh rate>".
-    // If the refresh rate is omitted, niri will pick the highest refresh rate
-    // for the resolution.
-    // If the mode is omitted altogether or is invalid, niri will pick one automatically.
-    // Run `niri msg outputs` while inside a niri instance to list all outputs and their modes.
-    mode "1920x1080@180.003"
-
-    // You can use integer or fractional scale, for example use 1.5 for 150% scale.
-    scale 1
-
-    // Transform allows to rotate the output counter-clockwise, valid values are:
-    // normal, 90, 180, 270, flipped, flipped-90, flipped-180 and flipped-270.
-    transform "normal"
-
-    // Position of the output in the global coordinate space.
-    // This affects directional monitor actions like "focus-monitor-left", and cursor movement.
-    // The cursor can only move between directly adjacent outputs.
-    // Output scale and rotation has to be taken into account for positioning:
-    // outputs are sized in logical, or scaled, pixels.
-    // For example, a 3840×2160 output with scale 2.0 will have a logical size of 1920×1080,
-    // so to put another output directly adjacent to it on the right, set its x to 1920.
-    // If the position is unset or results in an overlap, the output is instead placed
-    // automatically.
-    position x=1463 y=0
 }
 
 cursor {
