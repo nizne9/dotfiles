@@ -11,7 +11,7 @@ PopupWindow {
     property bool hovering: hoverHandler.hovered
 
     implicitWidth: 360
-    implicitHeight: Math.min(560, container.contentHeight + Theme.padding * 2)
+    implicitHeight: Math.max(120, Math.min(560, (container.contentHeight || 0) + Theme.padding * 2))
     color: "transparent"
 
     visible: shell.notificationsVisible

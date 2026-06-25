@@ -10,9 +10,13 @@ PopupWindow {
     property bool showing: false
     property var items: []
 
+    grabFocus: true
+
+    onClosed: showing = false
+
     // Grid layout: up to N columns, wrap to next row.
     readonly property int columns: Math.max(1, Math.min(Style.trayOverflowGridColumns, items.length))
-    readonly property int rows: Math.ceil(items.length / columns)
+    readonly property int rows: Math.max(1, Math.ceil(items.length / columns))
     readonly property int cellSize: Style.trayOverflowCellSize
     readonly property int cellSpacing: Style.gapXS
     readonly property int popupPadding: Style.paddingM
