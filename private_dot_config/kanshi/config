@@ -1,34 +1,52 @@
 # kanshi output profile manager
-# See kanshi(5) for syntax
+# See kanshi(5) for syntax.
 # Profiles are matched by the set of connected outputs.
-# Put more specific profiles first.
+# Each profile is self-contained: explicit mode/scale/position so kanshi
+# can apply it correctly without depending on niri's defaults.
+#
+# Output identifiers use connector names (eDP-1, DP-1) which are stable
+# for a laptop with a single dock. If you start using multiple docks or
+# multiple external DP outputs, switch to EDID identifiers:
+#   output "Manufacturer Model Serial" { ... }
+# Get EDID strings via `niri msg outputs`.
 
 # Laptop only: just the internal screen
 profile "laptop" {
 	output "eDP-1" {
 		enable
+		mode 2560x1600@60Hz
+		scale 1.75
 		position 0,0
+		transform normal
 	}
 }
 
-# Docked: external DP-1 as primary, internal eDP-1 on the right
-# (or disabled — uncomment the disable line and remove the enable block below)
+# Docked: internal on left, external DP-1 4K on right
 profile "docked-dp1" {
 	output "eDP-1" {
 		enable
+		mode 2560x1600@60Hz
+		scale 1.75
 		position 0,0
+		transform normal
 	}
 	output "DP-1" {
 		enable
+		mode 3840x2160@60Hz
+		scale 2.0
 		position 1462,0
+		transform normal
 	}
 }
 
-# Alternative: docked with eDP-1 off
+# Alternative: docked with internal screen off (uncomment to use)
 # profile "docked-dp1-only" {
 # 	output "eDP-1" disable
 # 	output "DP-1" {
 # 		enable
+# 		mode 3840x2160@60Hz
+# 		scale 2.0
 # 		position 0,0
+# 		transform normal
 # 	}
 # }
