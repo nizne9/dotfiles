@@ -88,7 +88,7 @@ input {
 output "eDP-1" {
     mode "2560x1600@59.994"
     scale 1.75
-    position x=1920 y=0
+    position x=0 y=0
     focus-at-startup
 }
 
@@ -151,7 +151,7 @@ output "DP-1" {
     // so to put another output directly adjacent to it on the right, set its x to 1920.
     // If the position is unset or results in an overlap, the output is instead placed
     // automatically.
-    position x=0 y=0
+    position x=1463 y=0
 }
 
 cursor {
