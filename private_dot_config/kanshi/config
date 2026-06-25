@@ -1,0 +1,34 @@
+# kanshi output profile manager
+# See kanshi(5) for syntax
+# Profiles are matched by the set of connected outputs.
+# Put more specific profiles first.
+
+# Laptop only: just the internal screen
+profile "laptop" {
+	output "eDP-1" {
+		enable
+		position 0,0
+	}
+}
+
+# Docked: external DP-1 as primary, internal eDP-1 on the right
+# (or disabled — uncomment the disable line and remove the enable block below)
+profile "docked-dp1" {
+	output "eDP-1" {
+		enable
+		position 0,0
+	}
+	output "DP-1" {
+		enable
+		position 1462,0
+	}
+}
+
+# Alternative: docked with eDP-1 off
+# profile "docked-dp1-only" {
+# 	output "eDP-1" disable
+# 	output "DP-1" {
+# 		enable
+# 		position 0,0
+# 	}
+# }
