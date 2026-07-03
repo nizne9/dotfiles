@@ -54,15 +54,7 @@ PanelWindow {
                 radius: Theme.radius
                 color: audioHover.hovered ? Theme.surfaceElevated : Theme.surface
 
-                readonly property string iconName: {
-                    if (Audio.isMuted || Audio.volume <= 0)
-                        return "volume-muted";
-                    if (Audio.volume < 0.34)
-                        return "volume-low";
-                    if (Audio.volume < 0.67)
-                        return "volume-medium";
-                    return "volume-high";
-                }
+                readonly property string iconName: Audio.volumeIcon
 
                 Row {
                     anchors.centerIn: parent
@@ -180,8 +172,6 @@ PanelWindow {
             Rectangle {
                 id: trayGroup
 
-                readonly property var hiddenPatterns: []
-                readonly property var pinnedInlinePatterns: []
                 readonly property var primarySystemPatterns: [
                     "network", "nm-applet", "networkmanager", "wireless", "wifi", "wlan", "ethernet", "vpn",
                     "bluetooth", "blueman", "bluez",
@@ -339,37 +329,14 @@ PanelWindow {
                     return false;
                 }
 
-                function isExplicitlyHidden(item) {
-                    const key = itemKey(item);
-                    return keyHasAny(key, hiddenPatterns);
-                }
-
-                function isPinnedInline(item) {
-                    const key = itemKey(item);
-                    return keyHasAny(key, pinnedInlinePatterns);
-                }
-
-                function isPrimarySystemItem(item) {
-                    if (!item)
-                        return false;
-
-                    const key = itemKey(item);
-                    if (keyHasAny(key, primarySystemPatterns))
-                        return true;
-
-                    return false;
-                }
-
                 function isInlineItem(item) {
-                    if (!item || item.status === Status.Passive || isExplicitlyHidden(item))
+                    if (!item || item.status === Status.Passive)
                         return false;
-                    if (isPinnedInline(item))
-                        return true;
-                    return isPrimarySystemItem(item);
+                    return keyHasAny(itemKey(item), primarySystemPatterns);
                 }
 
                 function isOverflowItem(item) {
-                    if (!item || item.status === Status.Passive || isExplicitlyHidden(item))
+                    if (!item || item.status === Status.Passive)
                         return false;
                     return !isInlineItem(item);
                 }
@@ -401,6 +368,7 @@ PanelWindow {
             }
 
             Rectangle {
+                id: clockWidget
                 width: Style.barClockWidth
                 height: Style.barItemHeight
                 radius: Theme.radius
@@ -462,15 +430,19 @@ PanelWindow {
     AudioPopup {
         id: audioPopup
         anchor.window: bar
-        anchor.rect.x: audioWidget.mapToItem(null, 0, 0).x
-        anchor.rect.y: Theme.barHeight
+        anchor.item: audioWidget
+        anchor.edges: Edges.Bottom
+        anchor.gravity: Edges.Bottom
+        anchor.margins.top: Style.popupBarOffset
     }
 
     NotificationCenter {
         id: notifCenter
         anchor.window: bar
-        anchor.rect.x: bar.width - Style.gapM - Style.panelWidthL
-        anchor.rect.y: Theme.barHeight
+        anchor.item: clockWidget
+        anchor.edges: Edges.Bottom | Edges.Right
+        anchor.gravity: Edges.Top | Edges.Right
+        anchor.margins.top: Style.popupBarOffset
         shell: bar.shell
     }
 }

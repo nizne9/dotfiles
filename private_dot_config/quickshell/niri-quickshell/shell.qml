@@ -53,7 +53,7 @@ ShellRoot {
         }
 
         function lock() {
-            if (lockScreenLoader.item)
+            if (lockScreenLoader.active && lockScreenLoader.item)
                 lockScreenLoader.item.locked = true;
         }
 

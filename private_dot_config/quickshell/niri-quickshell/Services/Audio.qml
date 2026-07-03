@@ -13,6 +13,16 @@ Scope {
     readonly property bool osdSuppressed: osdSuppressionCount > 0
     property var sink: Pipewire.ready ? Pipewire.defaultAudioSink : null
 
+    readonly property string volumeIcon: {
+        if (isMuted || volume <= 0)
+            return "volume-muted";
+        if (volume < 0.34)
+            return "volume-low";
+        if (volume < 0.67)
+            return "volume-medium";
+        return "volume-high";
+    }
+
     PwObjectTracker {
         objects: service.sink ? [service.sink] : []
     }

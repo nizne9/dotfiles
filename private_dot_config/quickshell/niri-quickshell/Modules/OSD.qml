@@ -12,15 +12,7 @@ PanelWindow {
     property bool windowVisible: false
 
     readonly property real displayValue: Audio.isMuted ? 0 : Math.max(0, Math.min(1, Audio.volume))
-    readonly property string volumeIcon: {
-        if (Audio.isMuted || Audio.volume <= 0)
-            return "volume-muted";
-        if (Audio.volume < 0.34)
-            return "volume-low";
-        if (Audio.volume < 0.67)
-            return "volume-medium";
-        return "volume-high";
-    }
+    readonly property string volumeIcon: Audio.volumeIcon
     readonly property string displayText: Audio.isMuted ? "Muted" : Math.round(Audio.volume * 100) + "%"
     readonly property color stateColor: Audio.isMuted ? Theme.urgent : Theme.accent
 
