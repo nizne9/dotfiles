@@ -24,18 +24,33 @@ setopt HIST_IGNORE_ALL_DUPS
 
 # Set editor default keymap to emacs (`-e`) or vi (`-v`)
 bindkey -v
+export KEYTIMEOUT=1
 
-# Cursor shape per vi mode: beam (insert), block (normal)
+# Cursor shape per vi mode: steady block (normal), steady beam (insert)
+# DECSCUSR: 1=blink block, 2=steady block, 5=steady beam, 6=blink beam
+_cursor_block() { print -n -- '\e[2 q'; }
+_cursor_beam()  { print -n -- '\e[5 q'; }
+
 zle-keymap-select() {
-  if [[ ${KEYMAP} == vicmd ]]; then
-    printf '\e[2 q'      # block, steady
-  else
-    printf '\e[5 q'      # beam, steady
-  fi
+  case $KEYMAP in
+    vicmd) _cursor_block ;;
+    viins|main|'') _cursor_beam ;;
+  esac
+  zle reset-prompt
 }
 zle -N zle-keymap-select
-zle-line-init() { printf '\e[5 q'; }
+
+zle-line-init() {
+  zle -K viins
+  _cursor_beam
+}
 zle -N zle-line-init
+
+zle-line-finish() { _cursor_block; }
+zle -N zle-line-finish
+
+# Ensure beam on each new prompt (covers return from external programs)
+precmd_functions+=(_cursor_beam)
 
 # Prompt for spelling correction of commands.
 #setopt CORRECT
