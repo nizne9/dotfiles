@@ -190,26 +190,6 @@ PanelWindow {
                 radius: Theme.radius
                 color: Theme.surface
 
-                Repeater {
-                    id: trayStatusWatcher
-                    model: SystemTray.items
-
-                    Item {
-                        readonly property var item: modelData || null
-
-                        Connections {
-                            target: item
-                            enabled: !!item
-                            function onIconChanged() { trayGroup.schedulePolicyUpdate(); }
-                            function onStatusChanged() { trayGroup.schedulePolicyUpdate(); }
-                            function onCategoryChanged() { trayGroup.schedulePolicyUpdate(); }
-                            function onIdChanged() { trayGroup.schedulePolicyUpdate(); }
-                            function onTitleChanged() { trayGroup.schedulePolicyUpdate(); }
-                            function onTooltipTitleChanged() { trayGroup.schedulePolicyUpdate(); }
-                        }
-                    }
-                }
-
                 Connections {
                     target: SystemTray.items
                     function onValuesChanged() { trayGroup.schedulePolicyUpdate(); }
@@ -271,7 +251,7 @@ PanelWindow {
                             Item {
                                 id: inlineTrayItem
 
-                                readonly property var item: modelData || null
+                                readonly property var item: (modelData && modelData.status !== undefined && !modelData.destroyed) ? modelData : null
                                 readonly property bool inlineItem: trayGroup.isInlineItem(item)
                                 readonly property bool needsAttention: item ? item.status === Status.NeedsAttention : false
 
@@ -330,13 +310,13 @@ PanelWindow {
                 }
 
                 function isInlineItem(item) {
-                    if (!item || item.status === Status.Passive)
+                    if (!item || item.destroyed || item.status === undefined || item.status === Status.Passive)
                         return false;
                     return keyHasAny(itemKey(item), primarySystemPatterns);
                 }
 
                 function isOverflowItem(item) {
-                    if (!item || item.status === Status.Passive)
+                    if (!item || item.destroyed || item.status === undefined || item.status === Status.Passive)
                         return false;
                     return !isInlineItem(item);
                 }
@@ -346,6 +326,9 @@ PanelWindow {
                     const items = [];
                     for (let i = 0; i < values.length; i++) {
                         const item = values[i];
+                        // 检查对象已销毁，避免悬空指针
+                        if (!item || item.status === undefined || item.destroyed)
+                            continue;
                         if (isOverflowItem(item))
                             items.push(item);
                     }

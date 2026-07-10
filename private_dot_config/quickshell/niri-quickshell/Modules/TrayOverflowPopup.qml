@@ -48,7 +48,7 @@ PopupWindow {
 
                 Rectangle {
                     id: cell
-                    readonly property var item: modelData || null
+                    readonly property var item: (modelData && modelData.status !== undefined && !modelData.destroyed) ? modelData : null
                     readonly property bool needsAttention: item ? item.status === Status.NeedsAttention : false
 
                     width: popup.cellSize
