@@ -1,0 +1,18 @@
+{{- if eq (get . "desktopProfile" | default "none") "niri-quickshell" -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Rebuild when the plugin sources or the local Qt ABI changes.
+# qt-version: {{ output "pkg-config" "--modversion" "Qt6Core" | trim }}
+# build-script: {{ include "private_dot_config/quickshell/niri-quickshell/scripts/executable_build-fzy-matcher.sh" | sha256sum }}
+# cmake: {{ include "private_dot_config/quickshell/niri-quickshell/native/fzy-matcher/CMakeLists.txt" | sha256sum }}
+# plugin.cpp: {{ include "private_dot_config/quickshell/niri-quickshell/native/fzy-matcher/src/plugin.cpp" | sha256sum }}
+# fzymatcher.cpp: {{ include "private_dot_config/quickshell/niri-quickshell/native/fzy-matcher/src/fzymatcher.cpp" | sha256sum }}
+# fzymatcher.h: {{ include "private_dot_config/quickshell/niri-quickshell/native/fzy-matcher/src/fzymatcher.h" | sha256sum }}
+# config.def.h: {{ include "private_dot_config/quickshell/niri-quickshell/native/fzy-matcher/third_party/fzy/src/config.def.h" | sha256sum }}
+# match.c: {{ include "private_dot_config/quickshell/niri-quickshell/native/fzy-matcher/third_party/fzy/src/match.c" | sha256sum }}
+# match.h: {{ include "private_dot_config/quickshell/niri-quickshell/native/fzy-matcher/third_party/fzy/src/match.h" | sha256sum }}
+# bonus.h: {{ include "private_dot_config/quickshell/niri-quickshell/native/fzy-matcher/third_party/fzy/src/bonus.h" | sha256sum }}
+
+"$HOME/.config/quickshell/niri-quickshell/scripts/build-fzy-matcher.sh"
+{{- end }}
