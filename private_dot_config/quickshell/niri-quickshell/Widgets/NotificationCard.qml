@@ -66,15 +66,20 @@ Rectangle {
                 model: card.actions
 
                 Rectangle {
+                    id: actionButton
+
+                    readonly property var action: modelData || null
+
+                    visible: !!action
                     width: Math.max(56, actionText.implicitWidth + 18)
-                    height: 24
+                    height: visible ? 24 : 0
                     radius: Theme.radius
                     color: actionHover.hovered ? card.actionColor : card.cardColor
 
                     Text {
                         id: actionText
                         anchors.centerIn: parent
-                        text: modelData.text || ""
+                        text: actionButton.action ? actionButton.action.text || "" : ""
                         color: Theme.text
                         font.family: Theme.fontFamily
                         font.pixelSize: 11
@@ -87,7 +92,10 @@ Rectangle {
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: Notifications.invokeAction(card.notification.id, modelData)
+                        onClicked: {
+                            if (card.notification && actionButton.action)
+                                Notifications.invokeAction(card.notification.id, actionButton.action);
+                        }
                     }
                 }
             }

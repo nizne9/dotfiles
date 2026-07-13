@@ -4,7 +4,6 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Widgets
 import Quickshell.Services.SystemTray
-import Quickshell.Services.Mpris
 import qs.Modules
 import qs.Services
 import qs.Common
@@ -154,7 +153,7 @@ PanelWindow {
 
                 Icon {
                     anchors.centerIn: parent
-                    name: Mpris.currentPlayer?.playbackState === Mpris.Playing ? "pause" : "play"
+                    name: Mpris.isPlaying ? "pause" : "play"
                     size: Style.barIconSize
                     color: Theme.text
                 }
@@ -165,7 +164,10 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: Mpris.currentPlayer?.playPause()
+                    onClicked: {
+                        if (Mpris.currentPlayer)
+                            Mpris.currentPlayer.togglePlaying();
+                    }
                 }
             }
 
@@ -178,11 +180,11 @@ PanelWindow {
                     "fcitx", "rime", "ibus", "input method", "keyboard layout", "kbd"
                 ]
 
-                property var overflowItems: []
+                property int overflowItemCount: 0
+                property bool overflowNeedsAttention: false
 
                 readonly property bool hasInlineItems: inlineTrayRow.implicitWidth > 0
-                readonly property bool hasOverflowItems: overflowItems.length > 0
-                readonly property bool overflowNeedsAttention: hasOverflowItems && overflowItems.some(item => item && item.status === Status.NeedsAttention)
+                readonly property bool hasOverflowItems: overflowItemCount > 0
 
                 visible: hasInlineItems || hasOverflowItems
                 width: visible ? inlineTrayRow.implicitWidth + (hasOverflowItems ? Style.trayOverflowWidth : 0) + Style.barTrayInnerPadding * 2 : 0
@@ -201,7 +203,7 @@ PanelWindow {
                     id: policyUpdateTimer
                     interval: 0
                     repeat: false
-                    onTriggered: trayGroup.updateOverflowItems()
+                    onTriggered: trayGroup.updateOverflowPolicy()
                 }
 
                 Row {
@@ -222,7 +224,7 @@ PanelWindow {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "+" + trayGroup.overflowItems.length
+                            text: "+" + trayGroup.overflowItemCount
                             color: trayGroup.overflowNeedsAttention ? Theme.urgent : Theme.muted
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize
@@ -251,7 +253,7 @@ PanelWindow {
                             Item {
                                 id: inlineTrayItem
 
-                                readonly property var item: (modelData && modelData.status !== undefined && !modelData.destroyed) ? modelData : null
+                                readonly property var item: modelData
                                 readonly property bool inlineItem: trayGroup.isInlineItem(item)
                                 readonly property bool needsAttention: item ? item.status === Status.NeedsAttention : false
 
@@ -286,6 +288,15 @@ PanelWindow {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: event => trayGroup.activateItem(inlineTrayItem, event)
                                 }
+
+                                Connections {
+                                    target: inlineTrayItem.item
+                                    function onIconChanged() { trayGroup.schedulePolicyUpdate(); }
+                                    function onStatusChanged() { trayGroup.schedulePolicyUpdate(); }
+                                    function onIdChanged() { trayGroup.schedulePolicyUpdate(); }
+                                    function onTitleChanged() { trayGroup.schedulePolicyUpdate(); }
+                                    function onTooltipTitleChanged() { trayGroup.schedulePolicyUpdate(); }
+                                }
                             }
                         }
                     }
@@ -310,29 +321,31 @@ PanelWindow {
                 }
 
                 function isInlineItem(item) {
-                    if (!item || item.destroyed || item.status === undefined || item.status === Status.Passive)
+                    if (!item || item.status === Status.Passive)
                         return false;
                     return keyHasAny(itemKey(item), primarySystemPatterns);
                 }
 
                 function isOverflowItem(item) {
-                    if (!item || item.destroyed || item.status === undefined || item.status === Status.Passive)
+                    if (!item || item.status === Status.Passive)
                         return false;
                     return !isInlineItem(item);
                 }
 
-                function updateOverflowItems() {
+                function updateOverflowPolicy() {
                     const values = SystemTray.items.values || [];
-                    const items = [];
+                    let count = 0;
+                    let needsAttention = false;
                     for (let i = 0; i < values.length; i++) {
                         const item = values[i];
-                        // 检查对象已销毁，避免悬空指针
-                        if (!item || item.status === undefined || item.destroyed)
-                            continue;
-                        if (isOverflowItem(item))
-                            items.push(item);
+                        if (isOverflowItem(item)) {
+                            count++;
+                            if (item.status === Status.NeedsAttention)
+                                needsAttention = true;
+                        }
                     }
-                    overflowItems = items;
+                    overflowItemCount = count;
+                    overflowNeedsAttention = needsAttention;
                 }
 
                 function activateItem(trayItem, event) {
@@ -401,13 +414,15 @@ PanelWindow {
 
     TrayOverflowPopup {
         id: trayOverflow
-        items: trayGroup.overflowItems
+        itemModel: SystemTray.items
+        itemCount: trayGroup.overflowItemCount
+        itemFilter: item => trayGroup.isOverflowItem(item)
         anchor.window: bar
         anchor.item: overflowButton
         anchor.edges: Edges.Bottom
         anchor.gravity: Edges.Bottom
         anchor.margins.top: Style.popupBarOffset
-        onItemsChanged: if (items.length === 0) close()
+        onItemCountChanged: if (itemCount === 0) close()
     }
 
     AudioPopup {

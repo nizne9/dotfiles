@@ -8,15 +8,17 @@ PopupWindow {
     id: popup
 
     property bool showing: false
-    property var items: []
+    property var itemModel: null
+    property var itemFilter: null
+    property int itemCount: 0
 
     grabFocus: true
 
     onClosed: showing = false
 
     // Grid layout: up to N columns, wrap to next row.
-    readonly property int columns: Math.max(1, Math.min(Style.trayOverflowGridColumns, items.length))
-    readonly property int rows: Math.max(1, Math.ceil(items.length / columns))
+    readonly property int columns: Math.max(1, Math.min(Style.trayOverflowGridColumns, itemCount))
+    readonly property int rows: Math.max(1, Math.ceil(itemCount / columns))
     readonly property int cellSize: Style.trayOverflowCellSize
     readonly property int cellSpacing: Style.gapXS
     readonly property int popupPadding: Style.paddingM
@@ -24,7 +26,7 @@ PopupWindow {
     implicitWidth: columns * cellSize + (columns - 1) * cellSpacing + popupPadding * 2
     implicitHeight: rows * cellSize + (rows - 1) * cellSpacing + popupPadding * 2
     color: "transparent"
-    visible: showing && items.length > 0
+    visible: showing && itemCount > 0
 
     onVisibleChanged: if (!visible) showing = false
 
@@ -44,15 +46,17 @@ PopupWindow {
             rowSpacing: popup.cellSpacing
 
             Repeater {
-                model: popup.items
+                model: popup.itemModel
 
                 Rectangle {
                     id: cell
-                    readonly property var item: (modelData && modelData.status !== undefined && !modelData.destroyed) ? modelData : null
+                    readonly property var item: modelData
+                    readonly property bool included: !!item && !!popup.itemFilter && popup.itemFilter(item)
                     readonly property bool needsAttention: item ? item.status === Status.NeedsAttention : false
 
-                    width: popup.cellSize
-                    height: popup.cellSize
+                    visible: included
+                    width: included ? popup.cellSize : 0
+                    height: included ? popup.cellSize : 0
                     radius: Style.radius
                     color: cellHover.hovered ? Theme.surface : "transparent"
                     border.color: needsAttention ? Theme.urgent : "transparent"
@@ -92,6 +96,6 @@ PopupWindow {
         }
     }
 
-    function toggle() { showing = items.length > 0 && !showing; }
+    function toggle() { showing = itemCount > 0 && !showing; }
     function close() { showing = false; }
 }

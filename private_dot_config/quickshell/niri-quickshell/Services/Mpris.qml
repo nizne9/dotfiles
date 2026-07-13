@@ -2,7 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Services.Mpris
+import Quickshell.Services.Mpris as QsMpris
 
 Scope {
     id: service
@@ -14,7 +14,7 @@ Scope {
     property bool isPlaying: false
 
     function selectPlayer() {
-        const players = Mpris.players.values;
+        const players = QsMpris.Mpris.players.values;
         if (players.length === 0) {
             currentPlayer = null;
             trackTitle = "";
@@ -26,7 +26,7 @@ Scope {
 
         let playing = null;
         for (let i = 0; i < players.length; i++) {
-            if (players[i].playbackState === MprisPlaybackState.Playing) {
+            if (players[i].playbackState === QsMpris.MprisPlaybackState.Playing) {
                 playing = players[i];
                 break;
             }
@@ -50,11 +50,11 @@ Scope {
         trackTitle = currentPlayer.trackTitle || "";
         trackArtist = currentPlayer.trackArtist || "";
         trackArtUrl = currentPlayer.trackArtUrl || "";
-        isPlaying = currentPlayer.playbackState === MprisPlaybackState.Playing;
+        isPlaying = currentPlayer.playbackState === QsMpris.MprisPlaybackState.Playing;
     }
 
     Connections {
-        target: Mpris.players
+        target: QsMpris.Mpris.players
         function onValuesChanged() { service.selectPlayer(); }
     }
 
