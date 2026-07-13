@@ -179,6 +179,7 @@ Scope {
         centerOpen = open;
         if (open) {
             const removed = toasts;
+            toastsPaused = false;
             toasts = [];
             expire.stop();
             for (let i = 0; i < removed.length; i++)
@@ -258,6 +259,7 @@ Scope {
         bodyMarkupSupported: false
         bodyHyperlinksSupported: false
         bodyImagesSupported: false
+        imageSupported: true
         actionsSupported: true
         actionIconsSupported: false
         persistenceSupported: true

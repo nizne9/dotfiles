@@ -1,112 +1,152 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import Quickshell
-import Quickshell.Services.Notifications
-import "../Common"
-import "../Services"
-import "../Widgets"
+import qs.Common
+import qs.Services
+import qs.Widgets
 
 PopupWindow {
     id: center
 
     property var shell
-
+    property var ownerScreen
     property bool showing: false
+    readonly property bool empty: Notifications.history.length === 0
+    readonly property int listHeight: empty ? 92 : Math.min(500, history.implicitHeight)
 
-    // Note: no grabFocus — niri has a known issue (#1810) where layer-shell
-    // popups with grab do not dismiss on outside click, and clicks do not
-    // pass through to the parent layer surface either. We rely on explicit
-    // close triggers: clock button toggle, ESC handled at shell level, etc.
-
+    grabFocus: true
     implicitWidth: Style.panelWidthL
-    implicitHeight: Math.max(Style.panelWidthM, Math.min(560, (container.contentHeight || 0) + Theme.padding * 2))
+    implicitHeight: Style.paddingM * 2 + header.height + Style.gapM + listHeight
     color: "transparent"
     visible: showing
 
-    Connections {
-        target: shell
-        function onNotificationsVisibleChanged() {
-            showing = shell.notificationsVisible;
+    onClosed: close()
+    onShowingChanged: {
+        if (showing) {
+            Notifications.setCenterOpen(true);
+            Qt.callLater(() => container.forceActiveFocus());
+        } else if (!shell || !shell.notificationsVisible) {
+            Notifications.setCenterOpen(false);
         }
     }
 
-    onShowingChanged: {
-        if (showing)
-            container.forceActiveFocus();
-        else if (shell && shell.notificationsVisible)
-            shell.closeNotifications();
+    Connections {
+        target: shell
+        function onNotificationsVisibleChanged() { center.syncShowing(); }
+        function onNotificationScreenChanged() { center.syncShowing(); }
     }
 
     Rectangle {
         id: container
         anchors.fill: parent
-        radius: Theme.radius
+        radius: Style.radiusL
         color: Theme.background
         border.color: Theme.border
         border.width: 1
         focus: true
-        Keys.onEscapePressed: center.showing = false
-
-        HoverHandler {
-            id: hoverHandler
-        }
-
-        property real contentHeight: mainColumn.implicitHeight
+        Keys.onEscapePressed: center.close()
 
         Column {
-            id: mainColumn
             anchors.fill: parent
-            anchors.margins: Theme.padding
-            spacing: Theme.gap
+            anchors.margins: Style.paddingM
+            spacing: Style.gapM
 
             Row {
+                id: header
                 width: parent.width
-                height: 28
+                height: 30
+                spacing: Style.gapXS
 
                 Text {
-                    width: parent.width - 80
-                    text: "Notifications"
+                    width: parent.width - dndButton.width - clearButton.width - closeButton.width - parent.spacing * 3
+                    text: center.empty ? "Notifications" : "Notifications  " + Notifications.history.length
                     color: Theme.text
+                    elide: Text.ElideRight
                     font.family: Theme.fontFamily
                     font.pixelSize: 15
+                    font.weight: Font.Medium
+                    anchors.verticalCenter: parent.verticalCenter
                 }
 
-                Text {
-                    width: 80
-                    horizontalAlignment: Text.AlignRight
-                    text: "Clear"
-                    color: Theme.accent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
+                NotificationIconButton {
+                    id: dndButton
+                    iconName: Notifications.doNotDisturb ? "notifications-off" : "notifications"
+                    accessibleName: Notifications.doNotDisturb ? "Turn off Do Not Disturb" : "Turn on Do Not Disturb"
+                    checked: Notifications.doNotDisturb
+                    onClicked: Notifications.toggleDoNotDisturb()
+                }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: Notifications.clearHistory()
-                    }
+                NotificationIconButton {
+                    id: clearButton
+                    iconName: String.fromCharCode(0xf1f8)
+                    accessibleName: "Clear all notifications"
+                    danger: true
+                    enabled: !center.empty
+                    opacity: enabled ? 1 : 0.35
+                    onClicked: Notifications.clearHistory()
+                }
+
+                NotificationIconButton {
+                    id: closeButton
+                    iconName: String.fromCharCode(0xf00d)
+                    accessibleName: "Close notification center"
+                    onClicked: center.close()
                 }
             }
 
-            Flickable {
+            Item {
                 width: parent.width
-                height: mainColumn.height - 36
-                contentHeight: history.height
-                clip: true
+                height: center.listHeight
 
                 Column {
-                    id: history
-                    width: parent.width
-                    spacing: Theme.gap
+                    anchors.centerIn: parent
+                    spacing: Style.gapS
+                    visible: center.empty
 
-                    Repeater {
-                        model: ScriptModel {
-                            values: Notifications.history
-                        }
+                    Icon {
+                        name: Notifications.doNotDisturb ? "notifications-off" : "notifications"
+                        size: Style.iconSizeLarge
+                        color: Theme.muted
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
 
-                        NotificationCard {
-                            notification: modelData
-                            cardColor: Theme.surface
-                            actionColor: Theme.surfaceElevated
-                            bodyMaxLines: 4
-                            dismissOnRightClick: true
+                    Text {
+                        text: Notifications.doNotDisturb ? "Do Not Disturb is on" : "No notifications"
+                        color: Theme.muted
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+                }
+
+                Flickable {
+                    id: list
+                    anchors.fill: parent
+                    visible: !center.empty
+                    contentHeight: history.implicitHeight
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    flickableDirection: Flickable.VerticalFlick
+
+                    Controls.ScrollBar.vertical: Controls.ScrollBar {
+                        policy: Controls.ScrollBar.AsNeeded
+                    }
+
+                    Column {
+                        id: history
+                        width: list.width - (list.contentHeight > list.height ? Style.gapM : 0)
+                        spacing: Style.gapM
+
+                        Repeater {
+                            model: ScriptModel { values: Notifications.history }
+
+                            NotificationCard {
+                                notification: modelData
+                                cardColor: Theme.surface
+                                actionColor: Theme.surfaceElevated
+                                bodyMaxLines: 4
+                                dismissOnRightClick: true
+                            }
                         }
                     }
                 }
@@ -114,7 +154,14 @@ PopupWindow {
         }
     }
 
-    function takeFocus() {
-        container.forceActiveFocus();
+    function syncShowing() {
+        showing = !!shell && shell.notificationsVisible && shell.notificationScreen === ownerScreen;
+    }
+
+    function close() {
+        if (shell)
+            shell.closeNotifications();
+        else
+            showing = false;
     }
 }

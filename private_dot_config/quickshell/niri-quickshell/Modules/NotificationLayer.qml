@@ -1,45 +1,69 @@
 import QtQuick
 import Quickshell
-import Quickshell.Services.Notifications
-import "../Common"
-import "../Services"
-import "../Widgets"
+import qs.Common
+import qs.Services
+import qs.Widgets
 
 PanelWindow {
     id: layer
 
+    readonly property var targetScreen: {
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++) {
+            if (screens[i].name === Niri.focusedOutput)
+                return screens[i];
+        }
+        return screens.length > 0 ? screens[0] : null;
+    }
+
+    screen: targetScreen
     anchors {
         top: true
         right: true
     }
 
-    implicitWidth: 360
-    implicitHeight: 220
+    implicitWidth: Style.panelWidthL
+    implicitHeight: Math.min(targetScreen ? targetScreen.height : 720,
+        Theme.barHeight + Style.gapL * 2 + toastColumn.implicitHeight)
     exclusiveZone: 0
     color: "transparent"
-    visible: Notifications.toasts.length > 0
+    visible: Notifications.toasts.length > 0 && !Notifications.centerOpen
 
-    Column {
-        anchors {
-            top: parent.top
-            right: parent.right
-            margins: 12
-        }
-        width: 336
-        spacing: Theme.gap
+    Item {
+        anchors.fill: parent
 
-        Repeater {
-            model: ScriptModel {
-                values: Notifications.toasts
+        HoverHandler {
+            id: layerHover
+            onHoveredChanged: {
+                if (hovered)
+                    Notifications.pauseToasts();
+                else
+                    Notifications.resumeToasts();
             }
+        }
 
-            NotificationCard {
-                notification: modelData
-                cardColor: Theme.background
-                actionColor: Theme.surface
-                bodyMaxLines: 3
-                dismissOnRightClick: true
-                dismissAction: function(id) { Notifications.dismissToast(id); }
+        Column {
+            id: toastColumn
+            anchors {
+                top: parent.top
+                topMargin: Theme.barHeight + Style.gapL
+                right: parent.right
+                rightMargin: Style.gapL
+            }
+            width: parent.width - Style.gapL * 2
+            spacing: Style.gapM
+
+            Repeater {
+                model: ScriptModel { values: Notifications.toasts }
+
+                NotificationCard {
+                    notification: modelData
+                    cardColor: Theme.background
+                    actionColor: Theme.surface
+                    bodyMaxLines: 3
+                    dismissOnRightClick: true
+                    dismissAction: function(id) { Notifications.dismissToast(id); }
+                }
             }
         }
     }

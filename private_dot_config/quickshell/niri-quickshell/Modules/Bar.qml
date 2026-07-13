@@ -370,7 +370,7 @@ PanelWindow {
                 radius: Theme.radius
                 color: clockHover.hovered ? Theme.surfaceElevated : Theme.surface
 
-                readonly property bool hasNotifications: Notifications.history.length > 0
+                readonly property bool hasNotifications: Notifications.unreadCount > 0
 
                 SystemClock {
                     id: clock
@@ -390,7 +390,7 @@ PanelWindow {
                     width: Style.statusDotSize
                     height: Style.statusDotSize
                     radius: width / 2
-                    color: Theme.accent
+                    color: Notifications.doNotDisturb ? Theme.muted : Theme.accent
                     anchors {
                         right: parent.right
                         rightMargin: Style.paddingS
@@ -406,7 +406,7 @@ PanelWindow {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: shell.toggleNotifications()
+                    onClicked: shell.toggleNotifications(bar.screen)
                 }
             }
         }
@@ -442,5 +442,6 @@ PanelWindow {
         anchor.gravity: Edges.Top | Edges.Right
         anchor.margins.top: Style.popupBarOffset
         shell: bar.shell
+        ownerScreen: bar.screen
     }
 }

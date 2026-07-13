@@ -12,6 +12,7 @@ ShellRoot {
     property bool uiReady: Config.loaded
     property bool launcherVisible: false
     property bool notificationsVisible: false
+    property var notificationScreen: null
 
     function toggleLauncher() {
         launcherVisible = !launcherVisible;
@@ -23,10 +24,15 @@ ShellRoot {
         launcherVisible = false;
     }
 
-    function toggleNotifications() {
-        notificationsVisible = !notificationsVisible;
-        if (notificationsVisible)
+    function toggleNotifications(screen) {
+        const target = screen || notificationScreen || (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null);
+        if (notificationsVisible && notificationScreen === target) {
+            closeNotifications();
+        } else {
+            notificationScreen = target;
+            notificationsVisible = true;
             launcherVisible = false;
+        }
     }
 
     function closeNotifications() {

@@ -13,6 +13,7 @@ Scope {
     property var windows: []
     property int focusedWindowId: -1
     property string focusedWindowTitle: "niri"
+    property string focusedOutput: ""
 
     function handleEvent(line) {
         const text = String(line).trim();
@@ -69,6 +70,12 @@ Scope {
             return left - right;
         });
         workspaces = sorted;
+        for (let i = 0; i < sorted.length; i++) {
+            if (sorted[i].is_focused) {
+                focusedOutput = sorted[i].output || "";
+                break;
+            }
+        }
     }
 
     function setWindows(next) {
