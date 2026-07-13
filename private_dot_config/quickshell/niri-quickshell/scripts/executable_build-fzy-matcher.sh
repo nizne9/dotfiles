@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if command -v chezmoi >/dev/null 2>&1; then
+if [[ -n "${NIRI_QUICKSHELL_FZY_SOURCE_DIR:-}" ]]; then
+  source_dir="$NIRI_QUICKSHELL_FZY_SOURCE_DIR"
+elif command -v chezmoi >/dev/null 2>&1; then
   source_dir="$(chezmoi source-path ~/.config/quickshell/niri-quickshell/native/fzy-matcher)"
 else
   source_dir="$HOME/.local/share/chezmoi/private_dot_config/quickshell/niri-quickshell/native/fzy-matcher"
