@@ -121,7 +121,7 @@ WlSessionLock {
         }
     }
 
-    PamContext {
+    property PamContext authContext: PamContext {
         id: pamAuth
         config: "login"
 
