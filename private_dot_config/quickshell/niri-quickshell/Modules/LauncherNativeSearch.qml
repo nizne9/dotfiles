@@ -1,5 +1,5 @@
 import QtQml
-import "../plugins/NiriQuickshell/FzyMatcher" as NativeSearch
+import NiriQuickshell.FzyMatcher 1.0 as NativeSearch
 
 QtObject {
     function rank(query, entries, limit) {

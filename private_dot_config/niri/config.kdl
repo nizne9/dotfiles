@@ -301,7 +301,7 @@ layout {
 // which may be more convenient to use.
 // See the binds section below for more spawn examples.
 
-spawn-at-startup "qs" "--no-duplicate" "-c" "niri-quickshell"
+spawn-sh-at-startup "$HOME/.config/quickshell/niri-quickshell/scripts/launch-shell.sh"
 spawn-at-startup "foot" "--server"
 
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
