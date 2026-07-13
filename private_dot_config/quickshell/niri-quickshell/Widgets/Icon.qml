@@ -40,6 +40,16 @@ Text {
             return "\uf026";
         case "volume-off":
             return "\uf6a9";
+        case "copy":
+            return "\uf0c5";
+        case "trash":
+            return "\uf1f8";
+        case "search":
+            return "\uf002";
+        case "image":
+            return "\uf03e";
+        case "image-broken":
+            return "\uf1c5";
         default:
             return iconName;
         }

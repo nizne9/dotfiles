@@ -2,3 +2,4 @@ singleton Niri Niri.qml
 singleton Audio Audio.qml
 singleton Mpris Mpris.qml
 singleton Notifications Notifications.qml
+singleton ClipboardHistory ClipboardHistory.qml

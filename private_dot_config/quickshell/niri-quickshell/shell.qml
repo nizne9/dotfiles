@@ -13,11 +13,14 @@ ShellRoot {
     property bool launcherVisible: false
     property bool notificationsVisible: false
     property var notificationScreen: null
+    property bool clipboardVisible: false
 
     function toggleLauncher() {
         launcherVisible = !launcherVisible;
-        if (launcherVisible)
+        if (launcherVisible) {
             notificationsVisible = false;
+            clipboardVisible = false;
+        }
     }
 
     function closeLauncher() {
@@ -32,11 +35,24 @@ ShellRoot {
             notificationScreen = target;
             notificationsVisible = true;
             launcherVisible = false;
+            clipboardVisible = false;
         }
     }
 
     function closeNotifications() {
         notificationsVisible = false;
+    }
+
+    function toggleClipboard() {
+        clipboardVisible = !clipboardVisible;
+        if (clipboardVisible) {
+            launcherVisible = false;
+            notificationsVisible = false;
+        }
+    }
+
+    function closeClipboard() {
+        clipboardVisible = false;
     }
 
     IpcHandler {
@@ -58,7 +74,18 @@ ShellRoot {
             root.closeNotifications();
         }
 
+        function toggleClipboard() {
+            root.toggleClipboard();
+        }
+
+        function closeClipboard() {
+            root.closeClipboard();
+        }
+
         function lock() {
+            root.closeLauncher();
+            root.closeNotifications();
+            root.closeClipboard();
             if (lockScreenLoader.active && lockScreenLoader.item)
                 lockScreenLoader.item.locked = true;
         }
@@ -95,6 +122,14 @@ ShellRoot {
         active: root.uiReady
 
         sourceComponent: Launcher {
+            shell: root
+        }
+    }
+
+    Loader {
+        active: root.uiReady
+
+        sourceComponent: ClipboardPanel {
             shell: root
         }
     }
