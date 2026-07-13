@@ -5,7 +5,10 @@
 {{- $desktopProfile := get . "desktopProfile" | default "none" -}}
 {{- if ne $desktopProfile "niri-quickshell" }}
 .config/niri/
-.config/alacritty/alacritty.toml
+.config/alacritty/
+.config/foot/
+.config/kanshi/
 .config/quickshell/
-.config/environment.d/10-xdg-data-dirs.conf
+.config/environment.d/
+.config/systemd/user/kanshi.service
 {{ end }}
