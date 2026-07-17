@@ -131,8 +131,7 @@ PanelWindow {
             keywords: toStringList(entry.keywords),
             categories: toStringList(entry.categories),
             icon: entry.icon || "",
-            exec: entry.exec || "",
-            entry: entry
+            exec: entry.exec || ""
         };
     }
 
@@ -183,13 +182,18 @@ PanelWindow {
         if (!entry)
             return;
 
-        // The modelData here is now a plain object built by filterEntries,
-        // so the actual DesktopEntry lives on .entry.
-        const target = entry.entry || entry;
+        const target = DesktopEntries.byId(String(entry.id || ""));
+        if (!target) {
+            console.warn("launcher: desktop entry disappeared", entry.id);
+            refilter();
+            return;
+        }
         try {
             target.execute();
         } catch (e) {
             console.warn("launcher: execute() failed", e);
+            refilter();
+            return;
         }
         shell.closeLauncher();
     }

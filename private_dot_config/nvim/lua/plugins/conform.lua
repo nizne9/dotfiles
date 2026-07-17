@@ -14,7 +14,6 @@ return {
         yaml = { 'prettierd', 'prettier' },
         bash = { 'shfmt' },
         sh = { 'shfmt' },
-        zsh = { 'shfmt' },
         ['_'] = { 'trim_whitespace' },
       },
       format_on_save = {

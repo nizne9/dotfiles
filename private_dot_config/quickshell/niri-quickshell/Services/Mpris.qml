@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import QtQml.Models
 import Quickshell
 import Quickshell.Services.Mpris as QsMpris
 
@@ -25,14 +26,19 @@ Scope {
         }
 
         let playing = null;
+        let currentPresent = false;
         for (let i = 0; i < players.length; i++) {
+            if (players[i] === currentPlayer)
+                currentPresent = true;
             if (players[i].playbackState === QsMpris.MprisPlaybackState.Playing) {
-                playing = players[i];
-                break;
+                if (!playing)
+                    playing = players[i];
             }
         }
 
-        const target = playing || players[0];
+        const currentIsPlaying = currentPresent
+            && currentPlayer.playbackState === QsMpris.MprisPlaybackState.Playing;
+        const target = currentIsPlaying ? currentPlayer : (playing || (currentPresent ? currentPlayer : players[0]));
         if (target !== currentPlayer) {
             currentPlayer = target;
         }
@@ -56,6 +62,16 @@ Scope {
     Connections {
         target: QsMpris.Mpris.players
         function onValuesChanged() { service.selectPlayer(); }
+    }
+
+    Instantiator {
+        model: QsMpris.Mpris.players
+
+        delegate: Connections {
+            required property var modelData
+            target: modelData
+            function onPlaybackStateChanged() { service.selectPlayer(); }
+        }
     }
 
     Connections {

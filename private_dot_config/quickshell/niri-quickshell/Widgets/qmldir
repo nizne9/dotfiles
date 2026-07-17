@@ -2,6 +2,3 @@ Icon Icon.qml
 VolumeSlider VolumeSlider.qml
 NotificationCard NotificationCard.qml
 NotificationIconButton NotificationIconButton.qml
-singleton Pill Pill.qml
-singleton PillButton PillButton.qml
-singleton SliderRow SliderRow.qml

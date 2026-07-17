@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import "Services"
 import "Modules"
 import "Common"
@@ -82,14 +81,6 @@ ShellRoot {
             root.closeClipboard();
         }
 
-        function lock() {
-            root.closeLauncher();
-            root.closeNotifications();
-            root.closeClipboard();
-            if (lockScreenLoader.active && lockScreenLoader.item)
-                lockScreenLoader.item.locked = true;
-        }
-
         function volumeUp() {
             Audio.setVolume(Audio.volume + 0.05);
         }
@@ -146,14 +137,6 @@ ShellRoot {
 
         sourceComponent: OSD {
             id: osdPanel
-        }
-    }
-
-    Loader {
-        id: lockScreenLoader
-        active: root.uiReady
-        sourceComponent: LockScreen {
-            id: lockScreen
         }
     }
 

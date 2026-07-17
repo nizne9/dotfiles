@@ -150,7 +150,10 @@ Scope {
     }
 
     function dismissToast(id) {
+        const removed = toasts.filter(i => i.id === id);
         toasts = toasts.filter(i => i.id !== id);
+        for (let i = 0; i < removed.length; i++)
+            expireIfUnused(removed[i]);
         scheduleExpiry();
     }
 
@@ -203,11 +206,11 @@ Scope {
         if (toastsPaused)
             return;
         const now = Date.now();
-        toasts = toasts.map(item => {
+        for (let i = 0; i < toasts.length; i++) {
+            const item = toasts[i];
             item.remainingMs = item.expiresAt > 0 ? Math.max(1, item.expiresAt - now) : 0;
             item.expiresAt = 0;
-            return item;
-        });
+        }
         toastsPaused = true;
         expire.stop();
     }
@@ -217,11 +220,11 @@ Scope {
             return;
         const now = Date.now();
         toastsPaused = false;
-        toasts = toasts.map(item => {
+        for (let i = 0; i < toasts.length; i++) {
+            const item = toasts[i];
             item.expiresAt = item.remainingMs > 0 ? now + item.remainingMs : 0;
             item.remainingMs = 0;
-            return item;
-        });
+        }
         scheduleExpiry();
     }
 

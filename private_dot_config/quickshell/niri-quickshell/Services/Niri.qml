@@ -30,37 +30,19 @@ Scope {
 
         if (event.WorkspacesChanged && event.WorkspacesChanged.workspaces)
             setWorkspaces(event.WorkspacesChanged.workspaces);
+        if (event.WorkspaceActivated)
+            activateWorkspace(event.WorkspaceActivated.id, event.WorkspaceActivated.focused);
+        if (event.WorkspaceActiveWindowChanged)
+            setWorkspaceActiveWindow(event.WorkspaceActiveWindowChanged.workspace_id,
+                event.WorkspaceActiveWindowChanged.active_window_id);
         if (event.WindowsChanged && event.WindowsChanged.windows)
             setWindows(event.WindowsChanged.windows);
-        if (event.WindowFocusChanged) {
-            const id = event.WindowFocusChanged.id;
-            focusedWindowId = id === null || id === undefined ? -1 : id;
-            updateFocusedWindowTitle();
-        }
-    }
-
-    function handleRequest(line) {
-        const text = String(line).trim();
-        if (text.length === 0)
-            return;
-
-        let msg = {};
-        try {
-            msg = JSON.parse(text);
-        } catch (error) {
-            console.log("niri request parse failed:", error, text);
-            return;
-        }
-
-        // Synchronous request/response is wrapped in {"Ok": ...}
-        if (!msg.Ok)
-            return;
-
-        const res = msg.Ok;
-        if (res.Workspaces)
-            setWorkspaces(res.Workspaces);
-        else if (res.Windows)
-            setWindows(res.Windows);
+        if (event.WindowOpenedOrChanged)
+            upsertWindow(event.WindowOpenedOrChanged.window);
+        if (event.WindowClosed)
+            removeWindow(event.WindowClosed.id);
+        if (event.WindowFocusChanged)
+            setFocusedWindow(event.WindowFocusChanged.id);
     }
 
     function setWorkspaces(next) {
@@ -70,6 +52,7 @@ Scope {
             return left - right;
         });
         workspaces = sorted;
+        focusedOutput = "";
         for (let i = 0; i < sorted.length; i++) {
             if (sorted[i].is_focused) {
                 focusedOutput = sorted[i].output || "";
@@ -78,8 +61,66 @@ Scope {
         }
     }
 
+    function activateWorkspace(id, focused) {
+        const target = workspaces.find(workspace => workspace.id === id);
+        if (!target)
+            return;
+
+        workspaces = workspaces.map(workspace => {
+            const copy = Object.assign({}, workspace);
+            if (workspace.output === target.output)
+                copy.is_active = workspace.id === id;
+            if (focused)
+                copy.is_focused = workspace.id === id;
+            return copy;
+        });
+        if (focused)
+            focusedOutput = target.output || "";
+    }
+
+    function setWorkspaceActiveWindow(workspaceId, windowId) {
+        workspaces = workspaces.map(workspace => {
+            if (workspace.id !== workspaceId)
+                return workspace;
+            const copy = Object.assign({}, workspace);
+            copy.active_window_id = windowId;
+            return copy;
+        });
+    }
+
     function setWindows(next) {
         windows = next.slice();
+        const focused = windows.find(window => window.is_focused);
+        focusedWindowId = focused ? focused.id : -1;
+        updateFocusedWindowTitle();
+    }
+
+    function upsertWindow(window) {
+        if (!window)
+            return;
+
+        const next = windows.filter(item => item.id !== window.id);
+        next.push(window);
+        windows = window.is_focused
+            ? next.map(item => Object.assign({}, item, { is_focused: item.id === window.id }))
+            : next;
+        if (window.is_focused)
+            focusedWindowId = window.id;
+        updateFocusedWindowTitle();
+    }
+
+    function removeWindow(id) {
+        windows = windows.filter(window => window.id !== id);
+        if (focusedWindowId === id)
+            focusedWindowId = -1;
+        updateFocusedWindowTitle();
+    }
+
+    function setFocusedWindow(id) {
+        focusedWindowId = id === null || id === undefined ? -1 : id;
+        windows = windows.map(window => Object.assign({}, window, {
+            is_focused: window.id === focusedWindowId
+        }));
         updateFocusedWindowTitle();
     }
 
@@ -108,16 +149,6 @@ Scope {
         niriEventStream.flush();
     }
 
-    function refreshWorkspaces() {
-        niriRequestSocket.write('"Workspaces"\n');
-        niriRequestSocket.flush();
-    }
-
-    function refreshWindows() {
-        niriRequestSocket.write('"Windows"\n');
-        niriRequestSocket.flush();
-    }
-
     Socket {
         id: niriEventStream
         path: service.socketPath
@@ -128,31 +159,11 @@ Scope {
         }
     }
 
-    Socket {
-        id: niriRequestSocket
-        path: service.socketPath
-        connected: service.socketPath.length > 0
-
-        parser: SplitParser {
-            onRead: line => service.handleRequest(line)
-        }
-    }
-
     Connections {
         target: niriEventStream
         function onConnectedChanged() {
             if (connected)
                 service.startEventStream();
-        }
-    }
-
-    Connections {
-        target: niriRequestSocket
-        function onConnectedChanged() {
-            if (connected) {
-                service.refreshWorkspaces();
-                service.refreshWindows();
-            }
         }
     }
 }
