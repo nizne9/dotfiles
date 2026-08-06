@@ -1,13 +1,14 @@
-# Desktop/Wayland settings are selected by the local chezmoi data key
-# `desktopProfile`, not by hostname. Valid values are:
-#   none
-#   niri-quickshell
-{{- $desktopProfile := get . "desktopProfile" | default "none" -}}
-{{- if ne $desktopProfile "niri-quickshell" }}
+# Desktop/Wayland configs are only deployed on machines whose
+# machineRole is "desktop". Valid values:
+#   desktop
+#   server
+{{- $machineRole := get . "machineRole" | default "server" -}}
+{{- if ne $machineRole "desktop" }}
 .config/niri/
 .config/foot/
 .config/kanshi/
 .config/quickshell/
 .config/environment.d/
 .config/systemd/user/kanshi.service
+.claude/
 {{ end }}

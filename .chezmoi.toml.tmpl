@@ -1,4 +1,4 @@
-{{- $desktopProfile := promptChoiceOnce . "desktopProfile" "Desktop profile" (list "none" "niri-quickshell") "none" -}}
+{{- $machineRole := promptChoiceOnce . "machineRole" "Machine role" (list "desktop" "server") "desktop" -}}
 
 [data]
-    desktopProfile = {{ $desktopProfile | quote }}
+    machineRole = {{ $machineRole | quote }}

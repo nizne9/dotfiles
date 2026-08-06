@@ -1,4 +1,4 @@
-{{- if eq (get . "desktopProfile" | default "none") "niri-quickshell" -}}
+{{- if eq (get . "machineRole" | default "server") "desktop" -}}
 #!/usr/bin/env bash
 set -euo pipefail
 
