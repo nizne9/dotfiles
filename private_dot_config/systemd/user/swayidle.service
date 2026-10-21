@@ -1,0 +1,14 @@
+[Unit]
+Description=Idle management (screen lock and display power)
+Documentation=man:swayidle(1)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/swayidle -w timeout 300 'swaylock -f' timeout 600 'niri msg action power-off-monitors' before-sleep 'swaylock -f'
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

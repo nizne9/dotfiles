@@ -1,0 +1,68 @@
+# Wayland session and desktop shell.
+niri-shm-sharing
+quickshell
+foot
+foot-terminfo
+kanshi
+udiskie
+solaar
+swayidle
+swaylock
+xwayland-satellite
+
+# Portals, authentication, secrets.
+xdg-desktop-portal-gnome
+xdg-desktop-portal-gtk
+polkit-gnome
+gnome-keyring
+
+# Input method.
+fcitx5
+fcitx5-configtool
+fcitx5-gtk
+fcitx5-qt
+fcitx5-rime
+rime-ice-git
+fcitx5-theme-wechat
+
+# Audio, network, Bluetooth.
+pipewire
+pipewire-pulse
+wireplumber
+networkmanager
+network-manager-applet
+blueman
+bluez
+bluez-utils
+
+# Clipboard, screenshots, media.
+cliphist
+wl-clipboard
+satty
+swappy
+mpv
+zathura
+zathura-cb
+zathura-pdf-poppler
+swayimg
+
+# Fonts and cursor theme.
+inter-font
+noto-fonts-cjk
+noto-fonts-emoji
+ttf-firacode-nerd
+bibata-cursor-theme-bin
+
+# Quickshell native matcher build.
+cmake
+pkgconf
+
+# Hardware controls used by niri binds.
+brightnessctl
+playerctl
+
+# Browser (Brave flags are managed).
+brave-bin
+
+# Qt5 Wayland support for legacy apps.
+qt5-wayland

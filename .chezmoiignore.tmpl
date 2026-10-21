@@ -1,3 +1,6 @@
+# Repo-internal package lists, not deployed.
+packages/
+
 # Desktop/Wayland configs are only deployed on machines whose
 # machineRole is "desktop". Valid values:
 #   desktop
@@ -13,5 +16,8 @@
 .config/quickshell/
 .config/environment.d/
 .config/systemd/user/kanshi.service
+.config/systemd/user/udiskie.service
+.config/systemd/user/swayidle.service
+.config/swaylock/
 .config/brave-flags.conf
 {{ end }}

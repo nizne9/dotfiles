@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Re-run when either package list changes.
+# common-packages: {{ include "packages/common.txt" | sha256sum }}
+{{- if eq (get . "machineRole") "desktop" }}
+# desktop-packages: {{ include "packages/desktop.txt" | sha256sum }}
+{{- end }}
+
+source_dir={{ .chezmoi.sourceDir | quote }}
+packages=()
+
+while IFS= read -r pkg; do
+  packages+=("$pkg")
+done < <(grep -hE '^[^#[:space:]]' "$source_dir/packages/common.txt")
+
+{{- if eq (get . "machineRole") "desktop" }}
+while IFS= read -r pkg; do
+  packages+=("$pkg")
+done < <(grep -hE '^[^#[:space:]]' "$source_dir/packages/desktop.txt")
+{{- end }}
+
+missing=()
+for pkg in "${packages[@]}"; do
+  pacman -Qq "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+done
+
+(( ${#missing[@]} == 0 )) && exit 0
+
+official=()
+aur=()
+for pkg in "${missing[@]}"; do
+  if pacman -Si "$pkg" >/dev/null 2>&1; then
+    official+=("$pkg")
+  else
+    aur+=("$pkg")
+  fi
+done
+
+if (( ${#official[@]} )); then
+  sudo pacman -S --needed --noconfirm "${official[@]}"
+fi
+
+if (( ${#aur[@]} )); then
+  if ! command -v paru >/dev/null 2>&1; then
+    printf 'Install paru to add these AUR packages: %s\n' "${aur[*]}" >&2
+    exit 1
+  fi
+  paru -S --needed --noconfirm "${aur[@]}"
+fi

@@ -1,0 +1,32 @@
+# Common packages for every machine.
+# Prerequisites not managed here: Arch base, base-devel, and an AUR helper (paru).
+chezmoi
+curl
+git
+git-filter-repo
+github-cli
+unzip
+zip
+zsh
+
+# Terminal and editor tooling.
+bat
+btop
+difftastic
+fastfetch
+fd
+fnm
+fzf
+go
+lazygit
+lsd
+luarocks
+neovim
+nodejs
+ripgrep
+tldr
+tree
+tree-sitter
+yazi
+zellij
+zoxide

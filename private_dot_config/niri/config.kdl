@@ -309,7 +309,6 @@ spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 // sensitive by password managers before they reach persistent history.
 spawn-sh-at-startup "exec wl-paste --type text --watch \"$HOME/.config/quickshell/niri-quickshell/scripts/store-clipboard.sh\""
 spawn-sh-at-startup "exec wl-paste --type image --watch \"$HOME/.config/quickshell/niri-quickshell/scripts/store-clipboard.sh\""
-spawn-at-startup "udiskie" "--smart-tray"
 spawn-at-startup "solaar" "--window=hide"
 
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
