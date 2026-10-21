@@ -1,3 +1,14 @@
+{{- if eq (get . "machineRole") "desktop" -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+profile="$HOME/.config/fcitx5/profile"
+if [[ -e "$profile" ]]; then
+  exit 0
+fi
+
+mkdir -p "${profile%/*}"
+cat > "$profile" <<'EOF'
 [Groups/0]
 # Group Name
 Name=Default
@@ -20,3 +31,5 @@ Name=rime
 
 [GroupOrder]
 0=Default
+EOF
+{{- end -}}

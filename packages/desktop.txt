@@ -49,11 +49,16 @@ zathura-cb
 zathura-pdf-poppler
 swayimg
 
-# Fonts and cursor theme.
+# Fonts and cursor theme (referenced by fontconfig aliases).
+adobe-source-han-sans-cn-fonts
+adobe-source-han-serif-cn-fonts
+adobe-source-serif-fonts
 inter-font
 noto-fonts-cjk
 noto-fonts-emoji
 ttf-firacode-nerd
+ttf-lxgw-wenkai-gb
+ttf-sarasa-gothic
 bibata-cursor-theme-bin
 
 # Quickshell native matcher build.
