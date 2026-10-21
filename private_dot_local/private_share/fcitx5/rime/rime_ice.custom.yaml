@@ -1,0 +1,11 @@
+patch:
+  "translator/packs":
+    - moegirl
+    # 模型参数
+  grammar:
+    language: wanxiang-lts-zh-hans
+    # 参考词数量
+    collocation_max_length: 8
+    collocation_min_length: 2
+
+  "translator/contextual_suggestions": false  # 词组权重预测，使用语言模型一般关闭

@@ -23,6 +23,9 @@ fcitx5-gtk
 fcitx5-qt
 fcitx5-rime
 rime-ice-git
+# Packs referenced by rime_ice.custom.yaml.
+rime-pinyin-moegirl
+rime-wanxiang-gram-zh-hans
 fcitx5-theme-wechat
 
 # Audio, network, Bluetooth.
