@@ -1,4 +1,4 @@
-{{- if eq (get . "machineRole" | default "server") "desktop" -}}
+{{- if eq (get . "machineRole") "desktop" -}}
 #!/usr/bin/env bash
 set -euo pipefail
 

@@ -2,7 +2,10 @@
 # machineRole is "desktop". Valid values:
 #   desktop
 #   server
-{{- $machineRole := get . "machineRole" | default "server" -}}
+{{- $machineRole := get . "machineRole" -}}
+{{- if not (has $machineRole (list "desktop" "server")) -}}
+{{-   fail (printf "machineRole must be \"desktop\" or \"server\" in %s (run \"chezmoi init\" to set it), got %q" .chezmoi.configFile $machineRole) -}}
+{{- end -}}
 {{- if ne $machineRole "desktop" }}
 .config/niri/
 .config/foot/
@@ -10,5 +13,5 @@
 .config/quickshell/
 .config/environment.d/
 .config/systemd/user/kanshi.service
-.claude/
+.config/brave-flags.conf
 {{ end }}
