@@ -1,0 +1,11 @@
+# Packages only needed by the niri-quickshell variant.
+# Idle locking and screen lock are owned by swayidle/swaylock here.
+swayidle
+swaylock
+
+# The shell spawns polkit-gnome as the authentication agent.
+polkit-gnome
+
+# Quickshell native matcher build.
+cmake
+pkgconf

@@ -23,4 +23,21 @@ packages/
 .config/fontconfig/
 .config/brave-flags.conf
 .local/share/fcitx5/
-{{ end }}
+{{- else }}
+# Desktop machines also pick a shell variant via desktopShell. Valid values:
+#   niri-quickshell  (the custom shell in .config/quickshell/niri-quickshell)
+#   dux-shell        (Dux Shell, formerly DankMaterialShell)
+{{-   $desktopShell := get . "desktopShell" -}}
+{{-   if not (has $desktopShell (list "niri-quickshell" "dux-shell")) -}}
+{{-     fail (printf "desktopShell must be \"niri-quickshell\" or \"dux-shell\" on a desktop machine (set it in %s), got %q" .chezmoi.configFile $desktopShell) -}}
+{{-   end -}}
+{{-   if ne $desktopShell "niri-quickshell" }}
+.config/quickshell/
+.config/swaylock/
+.config/niri/shell-niri-quickshell.kdl
+.config/systemd/user/swayidle.service
+{{-   end }}
+{{-   if ne $desktopShell "dux-shell" }}
+.config/niri/shell-dux-shell.kdl
+{{-   end }}
+{{- end }}

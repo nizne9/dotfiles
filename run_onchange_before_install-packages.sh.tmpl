@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Re-run when either package list changes.
+# Re-run when any package list changes.
 # common-packages: {{ include "packages/common.txt" | sha256sum }}
 {{- if eq (get . "machineRole") "desktop" }}
 # desktop-packages: {{ include "packages/desktop.txt" | sha256sum }}
+# shell-packages: {{ include (printf "packages/desktop-%s.txt" (get . "desktopShell")) | sha256sum }}
 {{- end }}
 
 source_dir={{ .chezmoi.sourceDir | quote }}
@@ -18,6 +19,9 @@ done < <(grep -hE '^[^#[:space:]]' "$source_dir/packages/common.txt")
 while IFS= read -r pkg; do
   packages+=("$pkg")
 done < <(grep -hE '^[^#[:space:]]' "$source_dir/packages/desktop.txt")
+while IFS= read -r pkg; do
+  packages+=("$pkg")
+done < <(grep -hE '^[^#[:space:]]' "$source_dir/packages/{{ printf "desktop-%s.txt" (get . "desktopShell") }}")
 {{- end }}
 
 # Fast path when everything is installed, so apply does not prompt for

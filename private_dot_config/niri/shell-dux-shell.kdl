@@ -1,0 +1,38 @@
+// Dux Shell (formerly DankMaterialShell) integration.
+//
+// Identifiers below verified against duxlabs.dev/docs/dms/compositors as of
+// 2026-10: after the 2.0 "Dux" rebrand the CLI binary, the user unit and the
+// niri fragment paths are still "dms" (Arch extra still ships dms-shell 1.x).
+// Re-check with `dms doctor` and the compositors doc when dux-shell 2.x
+// reaches the repos, and update this fragment if identifiers move to "dux".
+//
+// One-time setup on this machine (deliberately not chezmoi-managed, the Dux
+// CLI owns its unit):
+//   dms systemd enable    # starts dms.service bound to the compositor session
+// Do NOT also spawn "dms" "run" below; the docs warn against double-start.
+
+// Dux fills these files in ~/.config/niri/dms/ at runtime; chezmoi must not
+// manage them, only these include lines. Optional because they may not exist
+// until the shell has run once (needs niri >= 26.04).
+include optional=true "dms/colors.kdl"
+include optional=true "dms/layout.kdl"
+include optional=true "dms/alttab.kdl"
+include optional=true "dms/binds.kdl"
+
+// Generic session spawns (the niri-quickshell fragment carries its own copy).
+spawn-at-startup "foot" "--server"
+spawn-at-startup "solaar" "--window=hide"
+
+// Feed the Dux clipboard manager's history (per the compositors doc).
+spawn-sh-at-startup "exec wl-paste --watch cliphist store"
+
+binds {
+    Mod+Space hotkey-overlay-title="Open Launcher" { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
+    Mod+Alt+V hotkey-overlay-title="Open Clipboard History" { spawn "dms" "ipc" "call" "clipboard" "toggle"; }
+    Mod+N hotkey-overlay-title="Open Notifications" { spawn "dms" "ipc" "call" "notifications" "toggle"; }
+    Super+Alt+L hotkey-overlay-title="Lock the Screen" { spawn "dms" "ipc" "call" "lock" "lock"; }
+}
+
+// TODO when adopting dux-shell 2.x: add the recommended layer-rule placing
+// the "quickshell" namespace in the overview backdrop, and the floating
+// window rule for app-id "com.danklinux.dms" (syntax: compositors doc).

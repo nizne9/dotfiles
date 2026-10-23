@@ -1,4 +1,6 @@
 # Wayland session and desktop shell.
+# niri-shm-sharing is the compositor; quickshell is the engine used by both
+# shell variants (niri-quickshell and Dux Shell).
 niri-shm-sharing
 quickshell
 foot
@@ -6,14 +8,13 @@ foot-terminfo
 kanshi
 udiskie
 solaar
-swayidle
-swaylock
 xwayland-satellite
 
 # Portals, authentication, secrets.
+# The polkit agent itself is shell-specific: niri-quickshell spawns
+# polkit-gnome, Dux Shell ships its own (see desktop-*.txt).
 xdg-desktop-portal-gnome
 xdg-desktop-portal-gtk
-polkit-gnome
 gnome-keyring
 
 # Input method.
@@ -60,10 +61,6 @@ ttf-firacode-nerd
 ttf-lxgw-wenkai-gb
 ttf-sarasa-gothic
 bibata-cursor-theme-bin
-
-# Quickshell native matcher build.
-cmake
-pkgconf
 
 # Hardware controls used by niri binds.
 brightnessctl

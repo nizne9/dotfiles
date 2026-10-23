@@ -1,0 +1,6 @@
+# Packages only needed by the Dux Shell variant (formerly DankMaterialShell).
+# Idle/lock, polkit agent, notifications and clipboard management are owned
+# by the shell itself.
+# Still named dms-shell in Arch repos as of 2026-10; watch for a dux-shell
+# rename when 2.x lands.
+dms-shell

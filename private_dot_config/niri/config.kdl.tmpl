@@ -296,20 +296,9 @@ layout {
     }
 }
 
-// Add lines like this to spawn processes at startup.
-// Note that running niri as a session supports xdg-desktop-autostart,
-// which may be more convenient to use.
-// See the binds section below for more spawn examples.
-
-spawn-sh-at-startup "$HOME/.config/quickshell/niri-quickshell/scripts/launch-shell.sh"
-spawn-at-startup "foot" "--server"
-
-spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
-// Keep text and images as separate entries, and skip clipboard offers marked
-// sensitive by password managers before they reach persistent history.
-spawn-sh-at-startup "exec wl-paste --type text --watch \"$HOME/.config/quickshell/niri-quickshell/scripts/store-clipboard.sh\""
-spawn-sh-at-startup "exec wl-paste --type image --watch \"$HOME/.config/quickshell/niri-quickshell/scripts/store-clipboard.sh\""
-spawn-at-startup "solaar" "--window=hide"
+// Session spawns live in the per-shell fragment included at the end of this
+// file (shell-<desktopShell>.kdl): the shell launcher, its helpers, and the
+// generic session daemons (foot server, solaar) all start from there.
 
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
@@ -407,9 +396,9 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
+    // The launcher and locker binds are shell-specific and live in the
+    // per-shell fragment included at the end of this file.
     Mod+T hotkey-overlay-title="Open a Terminal: foot" { spawn "footclient"; }
-    Mod+D hotkey-overlay-title="Open Launcher" { spawn "qs" "-c" "niri-quickshell" "ipc" "call" "shell" "toggleLauncher"; }
-    Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument. It's passed verbatim to `sh -c`.
@@ -657,8 +646,9 @@ binds {
     // Powers off the monitors. To turn them back on, do any input like
     // moving the mouse or pressing any other key.
     Mod+Shift+P { power-off-monitors; }
-
-    // Customization
-    Mod+Alt+V hotkey-overlay-title="Open Clipboard History" { spawn "qs" "-c" "niri-quickshell" "ipc" "call" "shell" "toggleClipboard"; }
-    Mod+N hotkey-overlay-title="Open Notifications" { spawn "qs" "-c" "niri-quickshell" "ipc" "call" "shell" "toggleNotifications"; }
 }
+
+// Per-shell fragment: session spawns and shell-specific binds (launcher,
+// locker, clipboard, notifications). Selected by the desktopShell chezmoi
+// variable so each machine gets exactly one variant.
+include {{ printf "shell-%s.kdl" (get . "desktopShell") | quote }}

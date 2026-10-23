@@ -1,0 +1,22 @@
+// niri-quickshell: the custom Quickshell shell in ~/.config/quickshell/niri-quickshell.
+// Everything here is what other shells (e.g. Dux Shell) provide themselves:
+// the shell process, the polkit agent, the clipboard history feed, and binds
+// that talk to the shell over IPC. All session spawns live in this fragment
+// (the main config keeps none), so include-merge semantics for spawns never
+// come into play.
+
+spawn-sh-at-startup "$HOME/.config/quickshell/niri-quickshell/scripts/launch-shell.sh"
+spawn-at-startup "foot" "--server"
+spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
+// Keep text and images as separate entries, and skip clipboard offers marked
+// sensitive by password managers before they reach persistent history.
+spawn-sh-at-startup "exec wl-paste --type text --watch \"$HOME/.config/quickshell/niri-quickshell/scripts/store-clipboard.sh\""
+spawn-sh-at-startup "exec wl-paste --type image --watch \"$HOME/.config/quickshell/niri-quickshell/scripts/store-clipboard.sh\""
+spawn-at-startup "solaar" "--window=hide"
+
+binds {
+    Mod+D hotkey-overlay-title="Open Launcher" { spawn "qs" "-c" "niri-quickshell" "ipc" "call" "shell" "toggleLauncher"; }
+    Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
+    Mod+Alt+V hotkey-overlay-title="Open Clipboard History" { spawn "qs" "-c" "niri-quickshell" "ipc" "call" "shell" "toggleClipboard"; }
+    Mod+N hotkey-overlay-title="Open Notifications" { spawn "qs" "-c" "niri-quickshell" "ipc" "call" "shell" "toggleNotifications"; }
+}

@@ -1,5 +1,6 @@
 {{- if eq (get . "machineRole") "desktop" -}}
 {{- $units := glob (joinPath .chezmoi.sourceDir "private_dot_config/systemd/user/*.service") -}}
+{{- $desktopShell := get . "desktopShell" -}}
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -10,9 +11,14 @@ set -euo pipefail
 [ -d /run/systemd/system ] && command -v systemctl >/dev/null 2>&1 || exit 0
 
 systemctl --user daemon-reload
+# swayidle belongs to the niri-quickshell variant; other shells own their
+# idle/lock handling themselves.
 units=(
 {{- range $units }}
-  {{ base . | quote }}
+{{-   $name := base . }}
+{{-   if or (ne $name "swayidle.service") (eq $desktopShell "niri-quickshell") }}
+  {{ $name | quote }}
+{{-   end }}
 {{- end }}
 )
 for unit in "${units[@]}"; do
