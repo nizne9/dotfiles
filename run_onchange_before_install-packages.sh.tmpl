@@ -20,31 +20,19 @@ while IFS= read -r pkg; do
 done < <(grep -hE '^[^#[:space:]]' "$source_dir/packages/desktop.txt")
 {{- end }}
 
+# Fast path when everything is installed, so apply does not prompt for
+# sudo on every run.
 missing=()
 for pkg in "${packages[@]}"; do
   pacman -Qq "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
 done
+(( ${#missing[@]} )) || exit 0
 
-(( ${#missing[@]} == 0 )) && exit 0
-
-official=()
-aur=()
-for pkg in "${missing[@]}"; do
-  if pacman -Si "$pkg" >/dev/null 2>&1; then
-    official+=("$pkg")
-  else
-    aur+=("$pkg")
-  fi
-done
-
-if (( ${#official[@]} )); then
-  sudo pacman -S --needed --noconfirm "${official[@]}"
+if ! command -v paru >/dev/null 2>&1; then
+  printf 'Install paru to add these packages: %s\n' "${missing[*]}" >&2
+  exit 1
 fi
 
-if (( ${#aur[@]} )); then
-  if ! command -v paru >/dev/null 2>&1; then
-    printf 'Install paru to add these AUR packages: %s\n' "${aur[*]}" >&2
-    exit 1
-  fi
-  paru -S --needed --noconfirm "${aur[@]}"
-fi
+# A single paru transaction resolves official repos and the AUR together
+# and reports all unknown targets at once.
+paru -S --needed --noconfirm "${missing[@]}"
