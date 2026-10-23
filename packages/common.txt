@@ -9,6 +9,11 @@ unzip
 zip
 zsh
 
+# Cross-machine sync; device identity and config live in ~/.local/state/syncthing
+# (deliberately unmanaged). The package unit is enabled by
+# run_onchange_after_enable-syncthing.sh.
+syncthing
+
 # Terminal and editor tooling.
 bat
 btop
