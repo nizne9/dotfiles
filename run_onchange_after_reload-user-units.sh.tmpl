@@ -1,0 +1,29 @@
+{{- if eq (get . "machineRole") "desktop" -}}
+{{- $units := glob (joinPath .chezmoi.sourceDir "private_dot_config/systemd/user/*.service") -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Re-run when any managed user unit changes.
+{{ range $units }}# {{ base . }}: {{ include . | sha256sum }}
+{{ end }}
+# No-op without a systemd user manager (containers, non-systemd boots).
+[ -d /run/systemd/system ] && command -v systemctl >/dev/null 2>&1 || exit 0
+
+systemctl --user daemon-reload
+units=(
+{{- range $units }}
+  {{ base . | quote }}
+{{- end }}
+)
+for unit in "${units[@]}"; do
+  if systemctl --user is-active --quiet graphical-session.target; then
+    # The session is up: start the unit now if it is stopped.
+    systemctl --user enable --now "$unit"
+    # daemon-reload does not restart a modified-but-running unit.
+    systemctl --user try-restart "$unit"
+  else
+    # First apply from a TTY: graphical-session.target pulls it in at login.
+    systemctl --user enable "$unit"
+  fi
+done
+{{- end -}}
