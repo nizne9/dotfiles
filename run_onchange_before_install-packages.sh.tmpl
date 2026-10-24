@@ -1,3 +1,7 @@
+{{- /* packageBootstrap=skip renders this script empty so chezmoi apply
+deploys files without touching packages — empty scripts are not run
+and not recorded, so deleting the key re-enables the installer. */ -}}
+{{- if ne (get . "packageBootstrap" | default "install") "skip" -}}
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -33,11 +37,11 @@ case "$distro" in
       fi
       # One paru transaction resolves official repos and the AUR together
       # and reports all unknown targets at once.
-      # --noedit/--nodiff suppress paru's own review prompts that
-      # --noconfirm does not cover; a TTY is still required for the sudo
-      # password, so run chezmoi apply from a real terminal and answer any
-      # remaining provider-selection prompts once.
-      paru -S --needed --noconfirm --noedit --nodiff "$@"
+      # paru has no CLI flags for its PKGBUILD-review prompts (those live
+      # in paru.conf); --noconfirm only silences pacman itself. A TTY is
+      # required for the sudo password, and AUR provider-selection prompts
+      # must be answered once when they appear.
+      paru -S --needed --noconfirm "$@"
     }
     ;;
   *)
@@ -70,3 +74,4 @@ done
 (( ${#missing[@]} )) || exit 0
 
 install_missing "${missing[@]}"
+{{- end -}}
