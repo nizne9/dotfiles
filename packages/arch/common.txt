@@ -32,10 +32,7 @@ zellij
 claude-code
 openai-codex-bin
 opencode-bin
-antigravity-cli
 cc-switch-cli
-zeroclaw-bin
-zcode-bin
 
 # Archiving and downloads.
 7zip
