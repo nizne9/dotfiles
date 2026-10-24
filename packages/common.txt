@@ -2,6 +2,8 @@
 # Prerequisites not managed here: Arch base, base-devel, and an AUR helper (paru).
 chezmoi
 curl
+# Downloader for zim's utility-module `get` alias (falls back to curl if absent).
+aria2
 git
 git-filter-repo
 github-cli
