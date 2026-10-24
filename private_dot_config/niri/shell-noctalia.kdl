@@ -1,7 +1,8 @@
 // Noctalia v5 integration — a native Wayland + GLES shell (the
-// Quickshell-based v4 is archived upstream). Identifiers verified against
-// docs.noctalia.dev as of 2026-10 (AUR noctalia-git 5.2.1); start is a plain
-// spawn per the official niri guide (no systemd unit involved).
+// Quickshell-based v4 is archived upstream). Binds and rules below follow
+// the official niri compositor guide (docs.noctalia.dev) verbatim,
+// cross-checked against extra/noctalia 5.3.0; start is a plain spawn per
+// the guide (no systemd unit involved).
 //
 // Noctalia owns bar/dock/launcher, notifications, clipboard history, OSD,
 // lock screen and idle behavior; the polkit agent is not included upstream,
@@ -12,20 +13,31 @@ spawn-at-startup "foot" "--server"
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 spawn-at-startup "solaar" "--window=hide"
 
-// Settings window floats (per the niri compositor guide).
+// Allows notification actions and window activation from Noctalia
+// (per the compositor guide).
+debug {
+    honor-xdg-activation-with-invalid-serial
+}
+
+// Floating Noctalia settings window (guide's recommended size).
 window-rule {
     match app-id="dev.noctalia.Noctalia"
     open-floating true
+    default-column-width { fixed 1080; }
+    default-window-height { fixed 920; }
 }
 
 binds {
     Mod+Space hotkey-overlay-title="Open Launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
     Mod+S hotkey-overlay-title="Control Center" { spawn-sh "noctalia msg panel-toggle control-center"; }
+    Mod+Comma hotkey-overlay-title="Noctalia Settings" { spawn-sh "noctalia msg settings-toggle"; }
     Mod+Alt+V hotkey-overlay-title="Open Clipboard History" { spawn-sh "noctalia msg panel-toggle clipboard"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen" { spawn-sh "noctalia msg session lock"; }
+    Alt+Tab { spawn-sh "noctalia msg window-switcher hold"; }
 
     // Media keys route through Noctalia so its native OSD shows; these
     // override the common wpctl/brightnessctl binds (later keys win).
+    // allow-when-locked keeps parity with the common binds' behaviour.
     XF86AudioRaiseVolume  allow-when-locked=true { spawn-sh "noctalia msg volume-up"; }
     XF86AudioLowerVolume  allow-when-locked=true { spawn-sh "noctalia msg volume-down"; }
     XF86AudioMute         allow-when-locked=true { spawn-sh "noctalia msg volume-mute"; }
@@ -33,10 +45,11 @@ binds {
     XF86MonBrightnessDown allow-when-locked=true { spawn-sh "noctalia msg brightness-down"; }
 }
 
-// TODO on first adoption:
+// TODO on first adoption (taste/per-machine choices, see the guide):
 //  - notifications-center toggle bind: the command is not in the docs;
 //    check `noctalia msg --help` and add a Mod+N bind
-//  - layer-rules: backdrop/wallpaper placement and blur overrides per the
-//    niri compositor guide (needs niri >= 26.04, which this fleet runs)
-//  - the guide's xdg-activation debug flag for notification actions
-//    (exact niri syntax unverified here; check the guide before enabling)
+//  - layer-rules: one of the three wallpaper/backdrop options, plus blur
+//    overrides for the noctalia-* namespaces (niri >= 26.04)
+//  - global rounded corners (geometry-corner-radius 20) — desktop-wide
+//    aesthetics, belongs to the main config if wanted
+//  - lid-close -> "noctalia" "msg" "session" "lock-and-suspend" on laptops
