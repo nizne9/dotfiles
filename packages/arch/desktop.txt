@@ -75,6 +75,7 @@ ttf-ms-win11-auto
 ttf-ms-win11-auto-zh_cn
 ttf-zhuque-fangsong-bin
 otf-libertinus
+otf-ysabeau-git
 bibata-cursor-theme-bin
 
 # Hardware controls used by niri binds.
