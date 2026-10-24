@@ -25,13 +25,10 @@ fzf
 go
 lazygit
 lsd
-luarocks
 neovim
 nodejs
 ripgrep
-tldr
-tree
-tree-sitter
 yazi
 zellij
+tldr
 zoxide

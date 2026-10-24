@@ -46,11 +46,11 @@ bluez-utils
 # Clipboard, screenshots, media.
 cliphist
 wl-clipboard
+# Screenshot annotation; kept as a manual-use tool (swappy dropped as the
+# redundant twin).
 satty
-swappy
 mpv
 zathura
-zathura-cb
 zathura-pdf-poppler
 swayimg
 
