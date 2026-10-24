@@ -1,7 +1,3 @@
-{{- /* packageBootstrap=skip renders this script empty so chezmoi apply
-deploys files without touching packages — empty scripts are not run
-and not recorded, so deleting the key re-enables the installer. */ -}}
-{{- if ne (get . "packageBootstrap" | default "install") "skip" -}}
 #!/usr/bin/env bash
 set -euo pipefail
 
