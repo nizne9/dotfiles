@@ -26,18 +26,26 @@ distro="${ID:-unknown}"
 case "$distro" in
   arch)
     installed() { pacman -Qq "$1" >/dev/null 2>&1; }
+    # Official-repo packages install non-interactively via pacman. AUR
+    # packages are deliberately left to the user: builds, paru's review
+    # prompts and base-devel requirements do not belong in apply's
+    # critical path. The split is resolved at runtime because packages
+    # migrate between repos (noctalia moved AUR -> extra, for one).
     install_missing() {
-      if ! command -v paru >/dev/null 2>&1; then
-        printf 'Install paru to add these packages: %s\n' "$*" >&2
-        exit 1
+      local official=() aur=() pkg
+      for pkg in "$@"; do
+        if pacman -Si "$pkg" >/dev/null 2>&1; then
+          official+=("$pkg")
+        else
+          aur+=("$pkg")
+        fi
+      done
+      if (( ${#official[@]} )); then
+        sudo pacman -S --needed --noconfirm "${official[@]}"
       fi
-      # One paru transaction resolves official repos and the AUR together
-      # and reports all unknown targets at once.
-      # paru has no CLI flags for its PKGBUILD-review prompts (those live
-      # in paru.conf); --noconfirm only silences pacman itself. A TTY is
-      # required for the sudo password, and AUR provider-selection prompts
-      # must be answered once when they appear.
-      paru -S --needed --noconfirm "$@"
+      if (( ${#aur[@]} )); then
+        printf 'AUR packages left for manual install:\n  paru -S --needed %s\n' "${aur[*]}"
+      fi
     }
     ;;
   *)
