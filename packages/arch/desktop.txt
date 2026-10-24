@@ -64,6 +64,17 @@ noto-fonts-emoji
 ttf-firacode-nerd
 ttf-lxgw-wenkai-gb
 ttf-sarasa-gothic
+
+# Rendering-environment fonts beyond the aliases: full LXGW family variants,
+# real MS family names for Office document fidelity in WPS/WeChat, and
+# typst typography faces.
+ttf-lxgw-wenkai
+ttf-lxgw-wenkai-mono
+ttf-lxgw-wenkai-screen
+ttf-ms-win11-auto
+ttf-ms-win11-auto-zh_cn
+ttf-zhuque-fangsong-bin
+otf-libertinus
 bibata-cursor-theme-bin
 
 # Hardware controls used by niri binds.

@@ -57,6 +57,13 @@ typst
 tex-fmt
 mupdf-tools
 socat
+
+# Network policy and tunnels, wanted on every Arch machine.
+ufw
+boring-bin
+
+# Console font referenced by /etc/vconsole.conf (ter-v32b).
+terminus-font
 smartmontools
 usbutils
 pwdsafety-git
