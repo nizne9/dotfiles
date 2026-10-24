@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# The manifests below are Arch-specific (pacman/paru); servers in this
+# fleet may run other distros, so skip cleanly anywhere without pacman.
+[ -r /etc/arch-release ] && command -v pacman >/dev/null 2>&1 || exit 0
+
 # Re-run when any package list changes.
 # common-packages: {{ include "packages/common.txt" | sha256sum }}
 {{- if eq (get . "machineRole") "desktop" }}
