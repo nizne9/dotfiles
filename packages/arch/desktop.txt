@@ -71,7 +71,39 @@ brightnessctl
 playerctl
 
 # Browser (Brave flags are managed).
+# Browsers: brave (daily) + chrome (fallback); firefox/chromium removed
+# after the audit.
 brave-bin
+google-chrome
 
 # Qt5 Wayland support for legacy apps.
 qt5-wayland
+
+# Communication and office.
+wechat-universal-bwrap
+dingtalk-bin
+linuxqq
+wemeet-bin
+wps-office-365
+nutstore-experimental
+
+# Knowledge tools.
+obsidian
+zotero
+cherry-studio-bin
+pdfcraft-bin
+
+# IDEs and heavy dev GUIs.
+visual-studio-code-bin
+cursor-bin
+android-studio
+android-tools
+flutter-bin
+
+# Session entry, remote access, media.
+greetd-tuigreet
+obs-studio
+moonlight-qt
+remmina
+freerdp
+seahorse

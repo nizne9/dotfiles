@@ -27,3 +27,39 @@ ripgrep
 tldr
 yazi
 zellij
+
+# AI coding assistants and CLIs.
+claude-code
+openai-codex-bin
+opencode-bin
+antigravity-cli
+cc-switch-cli
+zeroclaw-bin
+zcode-bin
+
+# Archiving and downloads.
+7zip
+unrar
+yt-dlp
+
+# Extra dev runtimes and containers.
+bun
+uv
+rustup
+podman
+podman-compose
+
+# AUR packaging toolchain.
+nvchecker
+devtools
+namcap
+
+# Assorted CLI utilities.
+shfmt
+typst
+tex-fmt
+mupdf-tools
+socat
+smartmontools
+usbutils
+pwdsafety-git
