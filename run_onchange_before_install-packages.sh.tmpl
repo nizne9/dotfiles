@@ -33,7 +33,11 @@ case "$distro" in
       fi
       # One paru transaction resolves official repos and the AUR together
       # and reports all unknown targets at once.
-      paru -S --needed --noconfirm "$@"
+      # --noedit/--nodiff suppress paru's own review prompts that
+      # --noconfirm does not cover; a TTY is still required for the sudo
+      # password, so run chezmoi apply from a real terminal and answer any
+      # remaining provider-selection prompts once.
+      paru -S --needed --noconfirm --noedit --nodiff "$@"
     }
     ;;
   *)
