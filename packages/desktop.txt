@@ -23,11 +23,13 @@ fcitx5-configtool
 fcitx5-gtk
 fcitx5-qt
 fcitx5-rime
-rime-ice-git
-# Packs referenced by rime_ice.custom.yaml.
+rime-frost-git
+# Packs referenced by rime_frost.custom.yaml; the zhwiki/web-slang dicts
+# are unmanaged runtime data in ~/.local/share/fcitx5/rime.
 rime-pinyin-moegirl
 rime-wanxiang-gram-zh-hans
-fcitx5-theme-wechat
+# Candidate window theme (classicui.conf pins the latte/mocha blue variants).
+catppuccin-fcitx5-git
 
 # Audio, network, Bluetooth.
 pipewire

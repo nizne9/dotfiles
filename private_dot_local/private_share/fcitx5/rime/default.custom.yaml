@@ -1,7 +1,7 @@
 patch:
-  __include: rime_ice_suggestion:/
+  __include: rime_frost_suggestion:/
   __patch:
     menu/page_size: 8
     schema_list:
-      - schema: rime_ice
-      - schema: double_pinyin_flypy
+      - schema: rime_frost
+      - schema: rime_frost_double_pinyin_flypy

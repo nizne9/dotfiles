@@ -1,0 +1,7 @@
+patch:
+  # Same packs as the main schema; grammar tuning stays on the main schema
+  # per upstream (double pinyin keeps the stock configuration).
+  translator/packs:
+    - moegirl
+    - zhwiki
+    - web-slang

@@ -1,0 +1,20 @@
+patch:
+  # Dictionary packs compiled alongside the main dict (Rime DictionaryPack
+  # mechanism). moegirl ships as rime-pinyin-moegirl; zhwiki and web-slang
+  # are the official rime-format releases from felixonmars' repo, kept as
+  # unmanaged runtime data in this directory.
+  translator/packs:
+    - moegirl
+    - zhwiki
+    - web-slang
+  # Grammar model params are rime-frost's official recommendations
+  # (README), tuned for this dict with a wanxiang-lts n-gram model.
+  grammar:
+    language: wanxiang-lts-zh-hans
+    non_collocation_penalty: -4
+    collocation_max_length: 5
+    collocation_min_length: 2
+    collocation_penalty: -14
+  translator/contextual_suggestions: true
+  translator/max_homophones: 4
+  translator/max_homographs: 2
