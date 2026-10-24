@@ -1,0 +1,42 @@
+// Noctalia v5 integration — a native Wayland + GLES shell (the
+// Quickshell-based v4 is archived upstream). Identifiers verified against
+// docs.noctalia.dev as of 2026-10 (AUR noctalia-git 5.2.1); start is a plain
+// spawn per the official niri guide (no systemd unit involved).
+//
+// Noctalia owns bar/dock/launcher, notifications, clipboard history, OSD,
+// lock screen and idle behavior; the polkit agent is not included upstream,
+// so this fragment spawns polkit-gnome, mirroring niri-quickshell.
+
+spawn-at-startup "noctalia"
+spawn-at-startup "foot" "--server"
+spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
+spawn-at-startup "solaar" "--window=hide"
+
+// Settings window floats (per the niri compositor guide).
+window-rule {
+    match app-id="dev.noctalia.Noctalia"
+    open-floating true
+}
+
+binds {
+    Mod+Space hotkey-overlay-title="Open Launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
+    Mod+S hotkey-overlay-title="Control Center" { spawn-sh "noctalia msg panel-toggle control-center"; }
+    Mod+Alt+V hotkey-overlay-title="Open Clipboard History" { spawn-sh "noctalia msg panel-toggle clipboard"; }
+    Super+Alt+L hotkey-overlay-title="Lock the Screen" { spawn-sh "noctalia msg session lock"; }
+
+    // Media keys route through Noctalia so its native OSD shows; these
+    // override the common wpctl/brightnessctl binds (later keys win).
+    XF86AudioRaiseVolume  allow-when-locked=true { spawn-sh "noctalia msg volume-up"; }
+    XF86AudioLowerVolume  allow-when-locked=true { spawn-sh "noctalia msg volume-down"; }
+    XF86AudioMute         allow-when-locked=true { spawn-sh "noctalia msg volume-mute"; }
+    XF86MonBrightnessUp   allow-when-locked=true { spawn-sh "noctalia msg brightness-up"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn-sh "noctalia msg brightness-down"; }
+}
+
+// TODO on first adoption:
+//  - notifications-center toggle bind: the command is not in the docs;
+//    check `noctalia msg --help` and add a Mod+N bind
+//  - layer-rules: backdrop/wallpaper placement and blur overrides per the
+//    niri compositor guide (needs niri >= 26.04, which this fleet runs)
+//  - the guide's xdg-activation debug flag for notification actions
+//    (exact niri syntax unverified here; check the guide before enabling)

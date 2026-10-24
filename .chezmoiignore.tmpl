@@ -28,7 +28,7 @@ packages/
 #   niri-quickshell  (the custom shell in .config/quickshell/niri-quickshell)
 #   dux-shell        (Dux Shell, formerly DankMaterialShell)
 {{-   $desktopShell := get . "desktopShell" -}}
-{{-   if not (has $desktopShell (list "niri-quickshell" "dux-shell")) -}}
+{{-   if not (has $desktopShell (list "niri-quickshell" "noctalia" "dux-shell")) -}}
 {{-     fail (printf "desktopShell must be \"niri-quickshell\" or \"dux-shell\" on a desktop machine (set it in %s), got %q" .chezmoi.configFile $desktopShell) -}}
 {{-   end -}}
 {{-   if ne $desktopShell "niri-quickshell" }}
@@ -39,5 +39,8 @@ packages/
 {{-   end }}
 {{-   if ne $desktopShell "dux-shell" }}
 .config/niri/shell-dux-shell.kdl
+{{-   end }}
+{{-   if ne $desktopShell "noctalia" }}
+.config/niri/shell-noctalia.kdl
 {{-   end }}
 {{- end }}

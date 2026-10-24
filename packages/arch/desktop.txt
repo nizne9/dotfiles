@@ -1,6 +1,7 @@
 # Wayland session and desktop shell.
-# niri-shm-sharing is the compositor; quickshell is the engine used by both
-# shell variants (niri-quickshell and Dux Shell).
+# niri-shm-sharing is the compositor. quickshell is the engine for the
+# niri-quickshell and Dux Shell variants; Noctalia v5 is native and does not
+# need it.
 niri-shm-sharing
 quickshell
 foot

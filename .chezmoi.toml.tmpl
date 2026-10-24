@@ -1,7 +1,7 @@
 {{- $machineRole := promptChoiceOnce . "machineRole" "Machine role" (list "server" "desktop") "server" -}}
 {{- $desktopShell := "niri-quickshell" -}}
 {{- if eq $machineRole "desktop" -}}
-{{-   $desktopShell = promptChoiceOnce . "desktopShell" "Desktop shell" (list "niri-quickshell" "dux-shell") "niri-quickshell" -}}
+{{-   $desktopShell = promptChoiceOnce . "desktopShell" "Desktop shell" (list "niri-quickshell" "noctalia" "dux-shell") "niri-quickshell" -}}
 {{- end -}}
 
 [data]

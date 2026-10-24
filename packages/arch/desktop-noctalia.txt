@@ -1,0 +1,8 @@
+# Packages only needed by the Noctalia variant.
+# Noctalia v5 is a native Wayland + GLES shell (the Quickshell-based v4 is
+# archived upstream); it owns bar/dock/launcher, notifications, clipboard
+# history, OSD, lock screen and idle behavior itself.
+# The polkit authentication agent is NOT shipped upstream, so this variant
+# spawns polkit-gnome like the niri-quickshell one.
+noctalia-git
+polkit-gnome
