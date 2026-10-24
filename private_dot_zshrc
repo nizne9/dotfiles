@@ -157,3 +157,6 @@ if [[ -d "$FNM_PATH" ]]; then
 fi
 
 export MANPAGER='nvim +Man!'
+
+# tree was dropped from the package list; lsd --tree is the equivalent.
+alias tree='lsd --tree'
