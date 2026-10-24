@@ -24,9 +24,11 @@ fcitx5-gtk
 fcitx5-qt
 fcitx5-rime
 rime-frost-git
-# Packs referenced by rime_frost.custom.yaml; the zhwiki/web-slang dicts
-# are unmanaged runtime data in ~/.local/share/fcitx5/rime.
+# Packs referenced by rime_frost.custom.yaml: moegirl, zhwiki, web-slang
+# all ship as packages in rime-data form (moegirl from AUR, zhwiki family
+# from the official extra repo).
 rime-pinyin-moegirl
+rime-pinyin-zhwiki
 rime-wanxiang-gram-zh-hans
 # Candidate window theme (classicui.conf pins the latte/mocha blue variants).
 catppuccin-fcitx5-git
