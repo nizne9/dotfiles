@@ -1,46 +1,68 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# The manifests below are Arch-specific (pacman/paru); servers in this
-# fleet may run other distros, so skip cleanly anywhere without pacman.
-[ -r /etc/arch-release ] && command -v pacman >/dev/null 2>&1 || exit 0
+# Package policy: a distro-neutral intent layer (packages/core.txt, the
+# dependency closure of the managed configs) plus per-distro additions
+# under packages/<distro>/. The distro is a machine fact read from
+# os-release, not a profile choice; distros without a directory here skip
+# package management entirely.
 
-# Re-run when any package list changes.
-# common-packages: {{ include "packages/common.txt" | sha256sum }}
+# Re-run when any list changes.
+# core-packages: {{ include "packages/core.txt" | sha256sum }}
+# arch-common-packages: {{ include "packages/arch/common.txt" | sha256sum }}
 {{- if eq (get . "machineRole") "desktop" }}
-# desktop-packages: {{ include "packages/desktop.txt" | sha256sum }}
-# shell-packages: {{ include (printf "packages/desktop-%s.txt" (get . "desktopShell")) | sha256sum }}
+# arch-desktop-packages: {{ include "packages/arch/desktop.txt" | sha256sum }}
+# arch-shell-packages: {{ include (printf "packages/arch/desktop-%s.txt" (get . "desktopShell")) | sha256sum }}
 {{- end }}
 
 source_dir={{ .chezmoi.sourceDir | quote }}
+
+if [ ! -r /etc/os-release ]; then
+  exit 0
+fi
+. /etc/os-release
+distro="${ID:-unknown}"
+
+case "$distro" in
+  arch)
+    installed() { pacman -Qq "$1" >/dev/null 2>&1; }
+    install_missing() {
+      if ! command -v paru >/dev/null 2>&1; then
+        printf 'Install paru to add these packages: %s\n' "$*" >&2
+        exit 1
+      fi
+      # One paru transaction resolves official repos and the AUR together
+      # and reports all unknown targets at once.
+      paru -S --needed --noconfirm "$@"
+    }
+    ;;
+  *)
+    printf 'No package adapter for %s; skipping package management.\n' "$distro" >&2
+    exit 0
+    ;;
+esac
+
 packages=()
+collect() {
+  local list
+  for list in "$@"; do
+    while IFS= read -r pkg; do
+      packages+=("$pkg")
+    done < <(grep -hE '^[^#[:space:]]' "$source_dir/$list")
+  done
+}
 
-while IFS= read -r pkg; do
-  packages+=("$pkg")
-done < <(grep -hE '^[^#[:space:]]' "$source_dir/packages/common.txt")
-
+collect packages/core.txt "packages/$distro/common.txt"
 {{- if eq (get . "machineRole") "desktop" }}
-while IFS= read -r pkg; do
-  packages+=("$pkg")
-done < <(grep -hE '^[^#[:space:]]' "$source_dir/packages/desktop.txt")
-while IFS= read -r pkg; do
-  packages+=("$pkg")
-done < <(grep -hE '^[^#[:space:]]' "$source_dir/packages/{{ printf "desktop-%s.txt" (get . "desktopShell") }}")
+collect "packages/$distro/desktop.txt" "packages/$distro/desktop-{{ get . "desktopShell" }}.txt"
 {{- end }}
 
 # Fast path when everything is installed, so apply does not prompt for
 # sudo on every run.
 missing=()
 for pkg in "${packages[@]}"; do
-  pacman -Qq "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+  installed "$pkg" || missing+=("$pkg")
 done
 (( ${#missing[@]} )) || exit 0
 
-if ! command -v paru >/dev/null 2>&1; then
-  printf 'Install paru to add these packages: %s\n' "${missing[*]}" >&2
-  exit 1
-fi
-
-# A single paru transaction resolves official repos and the AUR together
-# and reports all unknown targets at once.
-paru -S --needed --noconfirm "${missing[@]}"
+install_missing "${missing[@]}"

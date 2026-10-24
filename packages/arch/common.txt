@@ -1,15 +1,11 @@
-# Common packages for every machine.
-# Prerequisites not managed here: Arch base, base-devel, and an AUR helper (paru).
-chezmoi
-curl
+# Arch additions for every Arch machine, on top of packages/core.txt.
+# Prerequisites not managed here: Arch base, base-devel, and paru.
 # Downloader for zim's utility-module `get` alias (falls back to curl if absent).
 aria2
-git
 git-filter-repo
 github-cli
 unzip
 zip
-zsh
 
 # Cross-machine sync; device identity and config live in ~/.local/state/syncthing
 # (deliberately unmanaged). The package unit is enabled by
@@ -23,14 +19,11 @@ difftastic
 fastfetch
 fd
 fnm
-fzf
 go
 lazygit
 lsd
-neovim
 nodejs
 ripgrep
+tldr
 yazi
 zellij
-tldr
-zoxide

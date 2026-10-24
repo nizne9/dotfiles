@@ -1,0 +1,12 @@
+# Distro-neutral intent layer: the dependency closure of the managed
+# configs — every package here is referenced unconditionally by a file in
+# this repo (zshrc/zshenv/zimrc, gitconfig, nvim + MANPAGER). Tools that
+# degrade gracefully when absent (fnm, lsd, aria2, syncthing, ...) do NOT
+# belong here; adapters translate this list to each distro's manager.
+chezmoi
+curl
+git
+zsh
+neovim
+fzf
+zoxide
