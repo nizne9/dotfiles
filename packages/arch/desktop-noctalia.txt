@@ -4,7 +4,10 @@
 # history, OSD, lock screen and idle behavior itself. The official
 # extra/noctalia binary tracks releases (5.3.0) — newer than the AUR -git
 # snapshot — so no reason to build from source.
+# noctalia-greeter pairs with greetd for a visually coherent login screen
+# (greetd-tuigreet from the common desktop list stays as fallback).
 # The polkit authentication agent is NOT shipped upstream, so this variant
 # spawns polkit-gnome like the niri-quickshell one.
 noctalia
+noctalia-greeter
 polkit-gnome
